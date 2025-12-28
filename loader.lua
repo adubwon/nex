@@ -11,8 +11,8 @@ local market = game.Players.LocalPlayer
 -- CONFIG
 --------------------------------------------------
 
-local CORRECT_KEY = "warp12"
-local DISCORD_LINK = "https://work.ink/2bPv/warpkey"
+local CORRECT_KEY = "warp123"
+local DISCORD_LINK = "work.ink/2bPv/warpkey"
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1454722498422636565/gPSTfTXLzNx2hCG5vPVj7OGQvrADswOkV06P6UpVO8eQIuMNJx7T829erp1nawjMPF3C"
 local LOGGED_USERS_FILE = "Warp_LoggedUsers.json"
 
@@ -481,6 +481,90 @@ local function loadMainScript()
 end
 
 --------------------------------------------------
+-- BROWSER FUNCTIONS
+--------------------------------------------------
+
+local function openBrowser(url)
+    -- Ensure URL has proper protocol
+    if not url:match("^https?://") then
+        url = "https://" .. url
+    end
+    
+    -- Method 1: Using syn.write_clipboard with launchuri (Synapse)
+    if syn and syn.write_clipboard then
+        pcall(function()
+            syn.write_clipboard(url)
+            if launchuri then
+                launchuri(url)
+            end
+        end)
+    end
+    
+    -- Method 2: Using shell command (Windows)
+    if os and os.execute then
+        pcall(function()
+            -- Common browser paths
+            local browserPaths = {
+                -- Opera GX
+                [[C:\Users\%USERNAME%\AppData\Local\Programs\Opera GX\launcher.exe]],
+                [[C:\Program Files\Opera GX\launcher.exe]],
+                [[C:\Program Files (x86)\Opera GX\launcher.exe]],
+                
+                -- Chrome
+                [[C:\Program Files\Google\Chrome\Application\chrome.exe]],
+                [[C:\Program Files (x86)\Google\Chrome\Application\chrome.exe]],
+                [[C:\Users\%USERNAME%\AppData\Local\Google\Chrome\Application\chrome.exe]],
+                
+                -- Edge
+                [[C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe]],
+                [[C:\Program Files\Microsoft\Edge\Application\msedge.exe]],
+                
+                -- Firefox
+                [[C:\Program Files\Mozilla Firefox\firefox.exe]],
+                [[C:\Program Files (x86)\Mozilla Firefox\firefox.exe]],
+                
+                -- Opera
+                [[C:\Program Files\Opera\launcher.exe]],
+                [[C:\Program Files (x86)\Opera\launcher.exe]],
+            }
+            
+            -- Try each browser
+            for _, path in ipairs(browserPaths) do
+                local expandedPath = path:gsub("%%USERNAME%%", os.getenv("USERNAME") or "")
+                local command = string.format('start "" "%s" "%s"', expandedPath, url)
+                if os.execute(command) then
+                    return true
+                end
+            end
+            
+            -- Fallback: Use default browser
+            os.execute(string.format('start "" "%s"', url))
+        end)
+    end
+    
+    -- Method 3: Using system API (if available)
+    if os and os.open then
+        pcall(os.open, url)
+    end
+    
+    -- Method 4: Using executor-specific methods
+    if setclipboard then
+        setclipboard(url)
+    end
+    
+    -- Method 5: Using HTTP request as last resort
+    pcall(function()
+        if syn and syn.request then
+            syn.request({Url = url, Method = "GET"})
+        elseif request then
+            request({Url = url, Method = "GET"})
+        elseif http then
+            http:GetAsync(url)
+        end
+    end)
+end
+
+--------------------------------------------------
 -- CREATE UI
 --------------------------------------------------
 
@@ -638,85 +722,17 @@ getKey.MouseButton1Click:Connect(function()
     -- Only log button click if user is already verified
     logButtonClick("Get Key Button")
     
+    -- Copy to clipboard
     if setclipboard then
         setclipboard(DISCORD_LINK)
     end
-
-    -- Auto-open the link in a browser
+    
+    -- Open in browser
     pcall(function()
-        -- First, ensure the URL has a proper protocol
-        local fullUrl = DISCORD_LINK
-        if not fullUrl:match("^https?://") then
-            fullUrl = "https://" .. fullUrl
-        end
-        
-        -- Try to open the link using various methods
-        local opened = false
-        
-        -- Method 1: Using syn.request (for Synapse)
-        if syn and syn.request then
-            pcall(function()
-                syn.request({
-                    Url = fullUrl,
-                    Method = "GET"
-                })
-                opened = true
-            end)
-        end
-        
-        -- Method 2: Using request (for other executors)
-        if not opened and request then
-            pcall(function()
-                request({
-                    Url = fullUrl,
-                    Method = "GET"
-                })
-                opened = true
-            end)
-        end
-        
-        -- Method 3: Using game:HttpGetAsync
-        if not opened then
-            pcall(function()
-                game:HttpGetAsync(fullUrl)
-                opened = true
-            end)
-        end
-        
-        -- Method 4: Using http:GetAsync
-        if not opened then
-            pcall(function()
-                http:GetAsync(fullUrl)
-                opened = true
-            end)
-        end
-        
-        -- Method 5: Using launchuri (for some executors)
-        if not opened and launchuri then
-            pcall(function()
-                launchuri(fullUrl)
-                opened = true
-            end)
-        end
-        
-        -- Method 6: Using ShellExecute (Windows-specific for some executors)
-        if not opened and os and os.execute then
-            pcall(function()
-                if fullUrl:match("^https?://") then
-                    -- For Windows
-                    if package.config:sub(1,1) == "\\" then
-                        os.execute('start "" "' .. fullUrl .. '"')
-                    else
-                        -- For other systems
-                        os.execute('xdg-open "' .. fullUrl .. '" 2>/dev/null')
-                    end
-                    opened = true
-                end
-            end)
-        end
+        openBrowser(DISCORD_LINK)
     end)
 
-    notify("Copied!", "Key link copied and opened.", 3)
+    notify("Copied!", "Key link copied and opening browser...", 3)
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
