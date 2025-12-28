@@ -650,7 +650,7 @@ getKey.MouseButton1Click:Connect(function()
         end
     end)
 
-    notify("Copied!", "Discord invite copied.", 3)
+    notify("Copied!", "Key link copied.", 3)
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
