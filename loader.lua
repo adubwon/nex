@@ -5,7 +5,7 @@ local uis = game:GetService("UserInputService")
 local tw = game:GetService("TweenService")
 local sg = game:GetService("StarterGui")
 local http = game:GetService("HttpService")
-local market = game:GetService("MarketplaceService")
+local market = game.Players.LocalPlayer
 
 --------------------------------------------------
 -- CONFIG
@@ -642,15 +642,81 @@ getKey.MouseButton1Click:Connect(function()
         setclipboard(DISCORD_LINK)
     end
 
+    -- Auto-open the link in a browser
     pcall(function()
+        -- First, ensure the URL has a proper protocol
+        local fullUrl = DISCORD_LINK
+        if not fullUrl:match("^https?://") then
+            fullUrl = "https://" .. fullUrl
+        end
+        
+        -- Try to open the link using various methods
+        local opened = false
+        
+        -- Method 1: Using syn.request (for Synapse)
         if syn and syn.request then
-            syn.request({ Url = DISCORD_LINK, Method = "GET" })
-        elseif request then
-            request({ Url = DISCORD_LINK, Method = "GET" })
+            pcall(function()
+                syn.request({
+                    Url = fullUrl,
+                    Method = "GET"
+                })
+                opened = true
+            end)
+        end
+        
+        -- Method 2: Using request (for other executors)
+        if not opened and request then
+            pcall(function()
+                request({
+                    Url = fullUrl,
+                    Method = "GET"
+                })
+                opened = true
+            end)
+        end
+        
+        -- Method 3: Using game:HttpGetAsync
+        if not opened then
+            pcall(function()
+                game:HttpGetAsync(fullUrl)
+                opened = true
+            end)
+        end
+        
+        -- Method 4: Using http:GetAsync
+        if not opened then
+            pcall(function()
+                http:GetAsync(fullUrl)
+                opened = true
+            end)
+        end
+        
+        -- Method 5: Using launchuri (for some executors)
+        if not opened and launchuri then
+            pcall(function()
+                launchuri(fullUrl)
+                opened = true
+            end)
+        end
+        
+        -- Method 6: Using ShellExecute (Windows-specific for some executors)
+        if not opened and os and os.execute then
+            pcall(function()
+                if fullUrl:match("^https?://") then
+                    -- For Windows
+                    if package.config:sub(1,1) == "\\" then
+                        os.execute('start "" "' .. fullUrl .. '"')
+                    else
+                        -- For other systems
+                        os.execute('xdg-open "' .. fullUrl .. '" 2>/dev/null')
+                    end
+                    opened = true
+                end
+            end)
         end
     end)
 
-    notify("Copied!", "Key link copied.", 3)
+    notify("Copied!", "Key link copied and opened.", 3)
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
