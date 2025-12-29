@@ -1,4 +1,5 @@
 -- Warp Key System - UPDATED WITH GAME CHECK AND LOGGING
+-- Enhanced with case-insensitive and space-insensitive key validation
 
 local plr = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
@@ -37,6 +38,35 @@ local GAME_SCRIPTS = {
 
 local CURRENT_PLACE_ID = game.PlaceId
 local SCRIPT_TO_LOAD = GAME_SCRIPTS[CURRENT_PLACE_ID]
+
+--------------------------------------------------
+-- KEY VALIDATION FUNCTIONS
+--------------------------------------------------
+
+local function normalizeKey(key)
+    if not key or type(key) ~= "string" then
+        return ""
+    end
+    
+    -- Remove all spaces and convert to lowercase
+    local normalized = key:gsub("%s+", ""):lower()
+    
+    -- Also remove other whitespace characters
+    normalized = normalized:gsub("\t", ""):gsub("\n", ""):gsub("\r", "")
+    
+    return normalized
+end
+
+local function validateKey(enteredKey)
+    -- Normalize the entered key
+    local normalizedEntered = normalizeKey(enteredKey)
+    
+    -- Normalize the correct key (for consistency)
+    local normalizedCorrect = normalizeKey(CORRECT_KEY)
+    
+    -- Compare the normalized keys
+    return normalizedEntered == normalizedCorrect, normalizedEntered
+end
 
 --------------------------------------------------
 -- STORAGE
@@ -643,7 +673,7 @@ local inputStroke = createStroke(inputFrame, Color3.fromRGB(40, 40, 40))
 local keyBox = Instance.new("TextBox", inputFrame)
 keyBox.Size = UDim2.new(1, -20, 1, 0)
 keyBox.Position = UDim2.new(0, 10, 0, 0)
-keyBox.PlaceholderText = "Enter key..."
+keyBox.PlaceholderText = "Enter key... (case and space insensitive)"
 keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyBox.BackgroundTransparency = 1
 keyBox.Font = Enum.Font.Gotham
@@ -701,12 +731,12 @@ end
 handleAutoLoad()
 
 --------------------------------------------------
--- LOGIC
+-- KEY VALIDATION LOGIC
 --------------------------------------------------
 
 submit.MouseButton1Click:Connect(function()
     local enteredKey = keyBox.Text
-    local success = enteredKey == CORRECT_KEY
+    local success, normalizedKey = validateKey(enteredKey)
     
     -- Always log key attempts (success or failure)
     logKeyAttempt(enteredKey, success)
@@ -719,6 +749,8 @@ submit.MouseButton1Click:Connect(function()
         loadMainScript()
     else
         notify("Invalid Key", "Wrong key entered.", 3)
+        -- Clear the input field
+        keyBox.Text = ""
     end
 end)
 
@@ -745,7 +777,3 @@ iconBtn.MouseButton1Click:Connect(function()
         logButtonClick("Open UI")
     end
 end)
-
---------------------------------------------------
--- END
---------------------------------------------------
