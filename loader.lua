@@ -1,6 +1,6 @@
 -- Warp Key System - UPDATED WITH GAME CHECK AND LOGGING
 -- Enhanced with case-insensitive and space-insensitive key validation
--- Using custom notification library
+-- Using custom notification library with Discord auto-open
 
 local plr = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
@@ -12,7 +12,6 @@ local market = game.Players.LocalPlayer
 --------------------------------------------------
 -- NOTIFICATION LIBRARY (Credits to blud_wtf and me)
 --------------------------------------------------
-
 
 local NotificationLib = {}
 local TweenService = game:GetService("TweenService")
@@ -44,7 +43,7 @@ local CONFIG = {
 		Info = "rbxassetid://112082878863231",
 		Warn = "rbxassetid://117107314745025",
 		Error = "rbxassetid://77067602950967",
-		Success = "rbxassetid://112082878863231" -- You can replace this with a success icon
+		Success = "rbxassetid://112082878863231"
 	}
 }
 
@@ -240,13 +239,12 @@ function NotificationLib.Success(content, title)
 	return createNotification(content or "Success", title or "Success", "Success")
 end
 
-
 --------------------------------------------------
 -- CONFIG
 --------------------------------------------------
 
 local CORRECT_KEY = "pineapple"
-local DISCORD_LINK = "https://discord.gg/warphub"
+local DISCORD_LINK = "https://discord.com/invite/warphub"
 
 -- SUPPORTED GAMES
 local GAME_SCRIPTS = {
@@ -269,6 +267,64 @@ local GAME_SCRIPTS = {
 
 local CURRENT_PLACE_ID = game.PlaceId
 local SCRIPT_TO_LOAD = GAME_SCRIPTS[CURRENT_PLACE_ID]
+
+--------------------------------------------------
+-- DISCORD AUTO-OPEN FUNCTION
+--------------------------------------------------
+
+local function openDiscordInvite()
+    local discordCode = string.match(DISCORD_LINK, "discord%.com/invite/(%w+)")
+    
+    if not discordCode then
+        -- Try alternative format
+        discordCode = string.match(DISCORD_LINK, "discord%.gg/(%w+)")
+    end
+    
+    if discordCode then
+        local http_request = (syn and syn.request) or (http and http.request) or request
+        if http_request then
+            local success, result = pcall(function()
+                local response = http_request({
+                    Url = "http://127.0.0.1:6463/rpc?v=1",
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["Origin"] = "https://discord.com"
+                    },
+                    Body = game:GetService("HttpService"):JSONEncode({
+                        cmd = "INVITE_BROWSER",
+                        args = {code = discordCode},
+                        nonce = game:GetService("HttpService"):GenerateGUID(false)
+                    })
+                })
+                
+                -- Check if Discord is running
+                if response.StatusCode ~= 204 then
+                    return false
+                end
+                return true
+            end)
+            
+            if success then
+                return true
+            end
+        end
+    end
+    
+    -- Fallback to browser method
+    pcall(function()
+        if setclipboard then
+            setclipboard(DISCORD_LINK)
+        end
+        
+        -- Try to open in default browser
+        if os and os.execute then
+            os.execute('start "" "' .. DISCORD_LINK .. '"')
+        end
+    end)
+    
+    return false
+end
 
 --------------------------------------------------
 -- KEY VALIDATION FUNCTIONS
@@ -431,90 +487,6 @@ local function loadMainScript()
 end
 
 --------------------------------------------------
--- BROWSER FUNCTIONS
---------------------------------------------------
-
-local function openBrowser(url)
-    -- Ensure URL has proper protocol
-    if not url:match("^https?://") then
-        url = "https://" .. url
-    end
-    
-    -- Method 1: Using syn.write_clipboard with launchuri (Synapse)
-    if syn and syn.write_clipboard then
-        pcall(function()
-            syn.write_clipboard(url)
-            if launchuri then
-                launchuri(url)
-            end
-        end)
-    end
-    
-    -- Method 2: Using shell command (Windows)
-    if os and os.execute then
-        pcall(function()
-            -- Common browser paths
-            local browserPaths = {
-                -- Opera GX
-                [[C:\Users\%USERNAME%\AppData\Local\Programs\Opera GX\launcher.exe]],
-                [[C:\Program Files\Opera GX\launcher.exe]],
-                [[C:\Program Files (x86)\Opera GX\launcher.exe]],
-                
-                -- Chrome
-                [[C:\Program Files\Google\Chrome\Application\chrome.exe]],
-                [[C:\Program Files (x86)\Google\Chrome\Application\chrome.exe]],
-                [[C:\Users\%USERNAME%\AppData\Local\Google\Chrome\Application\chrome.exe]],
-                
-                -- Edge
-                [[C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe]],
-                [[C:\Program Files\Microsoft\Edge\Application\msedge.exe]],
-                
-                -- Firefox
-                [[C:\Program Files\Mozilla Firefox\firefox.exe]],
-                [[C:\Program Files (x86)\Mozilla Firefox\firefox.exe]],
-                
-                -- Opera
-                [[C:\Program Files\Opera\launcher.exe]],
-                [[C:\Program Files (x86)\Opera\launcher.exe]],
-            }
-            
-            -- Try each browser
-            for _, path in ipairs(browserPaths) do
-                local expandedPath = path:gsub("%%USERNAME%%", os.getenv("USERNAME") or "")
-                local command = string.format('start "" "%s" "%s"', expandedPath, url)
-                if os.execute(command) then
-                    return true
-                end
-            end
-            
-            -- Fallback: Use default browser
-            os.execute(string.format('start "" "%s"', url))
-        end)
-    end
-    
-    -- Method 3: Using system API (if available)
-    if os and os.open then
-        pcall(os.open, url)
-    end
-    
-    -- Method 4: Using executor-specific methods
-    if setclipboard then
-        setclipboard(url)
-    end
-    
-    -- Method 5: Using HTTP request as last resort
-    pcall(function()
-        if syn and syn.request then
-            syn.request({Url = url, Method = "GET"})
-        elseif request then
-            request({Url = url, Method = "GET"})
-        elseif http then
-            http:GetAsync(url)
-        end
-    end)
-end
-
---------------------------------------------------
 -- CREATE UI
 --------------------------------------------------
 
@@ -589,7 +561,7 @@ local inputStroke = createStroke(inputFrame, Color3.fromRGB(40, 40, 40))
 local keyBox = Instance.new("TextBox", inputFrame)
 keyBox.Size = UDim2.new(1, -20, 1, 0)
 keyBox.Position = UDim2.new(0, 10, 0, 0)
-keyBox.PlaceholderText = "Enter key... (case and space insensitive)"
+keyBox.PlaceholderText = ""
 keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyBox.BackgroundTransparency = 1
 keyBox.Font = Enum.Font.Gotham
@@ -666,17 +638,13 @@ submit.MouseButton1Click:Connect(function()
 end)
 
 getKey.MouseButton1Click:Connect(function()
-    -- Copy to clipboard
-    if setclipboard then
-        setclipboard(DISCORD_LINK)
-    end
+    local discordOpened = openDiscordInvite()
     
-    -- Open in browser
-    pcall(function()
-        openBrowser(DISCORD_LINK)
-    end)
-
-    notify("Copied!", "Key link copied and opening browser...", "Info")
+    if discordOpened then
+        notify("Success", "Discord invite opened!", "Success")
+    else
+        notify("Info", "Discord link copied to clipboard!", "Info")
+    end
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
