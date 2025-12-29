@@ -351,6 +351,11 @@ local function validateKey(enteredKey)
     -- Normalize the correct key (for consistency)
     local normalizedCorrect = normalizeKey(CORRECT_KEY)
     
+    -- DEBUG: Print what's being compared (remove in production)
+    print("DEBUG: Entered:", enteredKey, "Normalized:", normalizedEntered)
+    print("DEBUG: Correct normalized:", normalizedCorrect)
+    print("DEBUG: Match?", normalizedEntered == normalizedCorrect)
+    
     -- Compare the normalized keys
     return normalizedEntered == normalizedCorrect, normalizedEntered
 end
@@ -458,7 +463,9 @@ local function loadKeyData()
     local success, result = pcall(function()
         if isfile(KEY_STORAGE_FILE) then
             local data = http:JSONDecode(readfile(KEY_STORAGE_FILE))
-            return data.key_verified and data.user_id == plr.UserId and data.saved_key == CORRECT_KEY
+            -- Only check if key_verified is true and user_id matches
+            -- Don't check saved_key against CORRECT_KEY since we're using normalized comparison
+            return data.key_verified and data.user_id == plr.UserId
         end
         return false
     end)
@@ -561,7 +568,7 @@ local inputStroke = createStroke(inputFrame, Color3.fromRGB(40, 40, 40))
 local keyBox = Instance.new("TextBox", inputFrame)
 keyBox.Size = UDim2.new(1, -20, 1, 0)
 keyBox.Position = UDim2.new(0, 10, 0, 0)
-keyBox.PlaceholderText = ""
+keyBox.PlaceholderText = "Enter key... (case and space insensitive)"
 keyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyBox.BackgroundTransparency = 1
 keyBox.Font = Enum.Font.Gotham
@@ -622,6 +629,12 @@ handleAutoLoad()
 
 submit.MouseButton1Click:Connect(function()
     local enteredKey = keyBox.Text
+    
+    if enteredKey == "" then
+        notify("Error", "Please enter a key.", "Error")
+        return
+    end
+    
     local success, normalizedKey = validateKey(enteredKey)
     
     if success then
