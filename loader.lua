@@ -42,7 +42,7 @@ local SCRIPT_TO_LOAD = GAME_SCRIPTS[CURRENT_PLACE_ID]
 -- STORAGE
 --------------------------------------------------
 
-local KEY_STORAGE_FILE = "Warp_KeyData.json"
+local KEY_STORAGE_FILE = "Warp.json"
 
 --------------------------------------------------
 -- COLORS
