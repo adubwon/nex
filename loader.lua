@@ -31,6 +31,7 @@ local GAME_SCRIPTS = {
     [3623096087] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/musclelegends.lua",
     [115499966198681] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/My%20Brainrot%20Army.lua",
     [3678761576] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
+    [77888146126370] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
 }
 
 local CURRENT_PLACE_ID = game.PlaceId
