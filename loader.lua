@@ -1,5 +1,6 @@
 -- Warp Key System - UPDATED WITH GAME CHECK AND LOGGING
 -- Enhanced with case-insensitive and space-insensitive key validation
+-- Using custom notification library
 
 local plr = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
@@ -9,13 +10,246 @@ local http = game:GetService("HttpService")
 local market = game.Players.LocalPlayer
 
 --------------------------------------------------
+-- NOTIFICATION LIBRARY (Credits to blud_wtf and me)
+--------------------------------------------------
+
+local NotificationLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-username/your-repo/main/NotificationLib.lua"))() -- Replace with your hosted URL
+-- OR use the local version below by uncommenting:
+
+--[[
+local NotificationLib = {}
+local TweenService = game:GetService("TweenService")
+local Players = game.Players
+
+local CONFIG = {
+	NotificationWidth = 350,
+	NotificationHeight = 80,
+	Padding = 10,
+	InternalPadding = 10,
+	IconSize = 40,
+	DisplayTime = 5,
+	BackgroundColor = Color3.fromRGB(45, 45, 45),
+	BackgroundTransparency = 0.1,
+	StrokeColor = Color3.fromRGB(80, 80, 80),
+	StrokeThickness = 1,
+	TextColor = Color3.fromRGB(240, 240, 240),
+	TitleFont = Enum.Font.SourceSansSemibold,
+	TitleSize = 18,
+	ContentFont = Enum.Font.SourceSans,
+	ContentSize = 15,
+	EntryEasingStyle = Enum.EasingStyle.Back,
+	EntryEasingDirection = Enum.EasingDirection.Out,
+	EntryTime = 0.5,
+	ExitEasingStyle = Enum.EasingStyle.Quad,
+	ExitEasingDirection = Enum.EasingDirection.In,
+	ExitTime = 0.4,
+	Icons = {
+		Info = "rbxassetid://112082878863231",
+		Warn = "rbxassetid://117107314745025",
+		Error = "rbxassetid://77067602950967",
+		Success = "rbxassetid://112082878863231" -- You can replace this with a success icon
+	}
+}
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local screenGui = nil
+local notificationList = {}
+local isInitialized = false
+
+local function initializeUI()
+	if isInitialized then return end
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "EnhancedNotifUI"
+	screenGui.Parent = playerGui
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.DisplayOrder = 999
+	screenGui.ResetOnSpawn = false
+	isInitialized = true
+end
+
+local function updateNotificationPositions()
+	if not screenGui then return end
+	local currentY = -CONFIG.Padding
+	local itemsToRemove = {}
+	for i = 1, #notificationList do
+		local notifFrame = notificationList[i]
+		if not notifFrame or not notifFrame.Parent then
+			table.insert(itemsToRemove, i)
+			continue
+		end
+		local targetPos = UDim2.new(1, -CONFIG.Padding, 1, currentY)
+		notifFrame:TweenPosition(targetPos, Enum.EasingDirection.Out, Enum.EasingStyle.Sine, 0.3, true)
+		currentY = currentY - (notifFrame.AbsoluteSize.Y + CONFIG.Padding)
+	end
+	for i = #itemsToRemove, 1, -1 do
+		table.remove(notificationList, itemsToRemove[i])
+	end
+end
+
+local function createNotification(contentText, titleText, notifType)
+	initializeUI()
+	local frame = Instance.new("Frame")
+	frame.Name = "NotificationFrame"
+	frame.Position = UDim2.new(1, CONFIG.NotificationWidth + 50, 1, 0)
+	frame.Size = UDim2.new(0, CONFIG.NotificationWidth, 0, CONFIG.NotificationHeight)
+	frame.AnchorPoint = Vector2.new(1, 1)
+	frame.BackgroundColor3 = CONFIG.BackgroundColor
+	frame.BackgroundTransparency = CONFIG.BackgroundTransparency
+	frame.BorderSizePixel = 0
+	frame.ClipsDescendants = true
+	frame.LayoutOrder = -#notificationList
+	frame.Parent = screenGui
+	frame.AutomaticSize = Enum.AutomaticSize.Y
+	
+	local uiCorner = Instance.new("UICorner")
+	uiCorner.CornerRadius = UDim.new(0, 6)
+	uiCorner.Parent = frame
+	
+	local uiStroke = Instance.new("UIStroke")
+	uiStroke.Color = CONFIG.StrokeColor
+	uiStroke.Thickness = CONFIG.StrokeThickness
+	uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	uiStroke.Parent = frame
+	
+	local uiPadding = Instance.new("UIPadding")
+	uiPadding.PaddingTop = UDim.new(0, CONFIG.InternalPadding)
+	uiPadding.PaddingBottom = UDim.new(0, CONFIG.InternalPadding)
+	uiPadding.PaddingLeft = UDim.new(0, CONFIG.InternalPadding)
+	uiPadding.PaddingRight = UDim.new(0, CONFIG.InternalPadding)
+	uiPadding.Parent = frame
+	
+	local iconImage = Instance.new("ImageLabel")
+	iconImage.Name = "Icon"
+	iconImage.Size = UDim2.new(0, CONFIG.IconSize, 0, CONFIG.IconSize)
+	iconImage.BackgroundTransparency = 1
+	iconImage.Image = CONFIG.Icons[notifType] or CONFIG.Icons.Info
+	iconImage.ScaleType = Enum.ScaleType.Fit
+	iconImage.AnchorPoint = Vector2.new(0, 0.5)
+	iconImage.Position = UDim2.new(0, 0, 0.5, 0)
+	iconImage.Parent = frame
+	
+	local iconAspectRatio = Instance.new("UIAspectRatioConstraint")
+	iconAspectRatio.AspectRatio = 1.0
+	iconAspectRatio.DominantAxis = Enum.DominantAxis.Height
+	iconAspectRatio.Parent = iconImage
+	
+	local textFrame = Instance.new("Frame")
+	textFrame.Name = "TextContainer"
+	textFrame.BackgroundTransparency = 1
+	textFrame.Size = UDim2.new(1, -(CONFIG.IconSize + CONFIG.InternalPadding + 5), 1, 0)
+	textFrame.Position = UDim2.new(0, CONFIG.IconSize + 5, 0, 0)
+	textFrame.Parent = frame
+	textFrame.AutomaticSize = Enum.AutomaticSize.Y
+	
+	local textListLayout = Instance.new("UIListLayout")
+	textListLayout.FillDirection = Enum.FillDirection.Vertical
+	textListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	textListLayout.Padding = UDim.new(0, 2)
+	textListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	textListLayout.Parent = textFrame
+	
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Text = titleText or "Notification"
+	title.Font = CONFIG.TitleFont
+	title.TextSize = CONFIG.TitleSize
+	title.TextColor3 = CONFIG.TextColor
+	title.TextWrapped = true
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.BackgroundTransparency = 1
+	title.AutomaticSize = Enum.AutomaticSize.Y
+	title.Size = UDim2.new(1, 0, 0, CONFIG.TitleSize)
+	title.LayoutOrder = 1
+	title.Parent = textFrame
+	
+	local content = Instance.new("TextLabel")
+	content.Name = "Content"
+	content.Text = contentText or "Notification Content"
+	content.Font = CONFIG.ContentFont
+	content.TextSize = CONFIG.ContentSize
+	content.TextColor3 = CONFIG.TextColor
+	content.TextWrapped = true
+	content.TextXAlignment = Enum.TextXAlignment.Left
+	content.TextYAlignment = Enum.TextYAlignment.Top
+	content.BackgroundTransparency = 1
+	content.AutomaticSize = Enum.AutomaticSize.Y
+	content.Size = UDim2.new(1, 0, 0, CONFIG.ContentSize)
+	content.LayoutOrder = 2
+	content.Parent = textFrame
+	
+	table.insert(notificationList, 1, frame)
+	updateNotificationPositions()
+	
+	local initialTargetY = -CONFIG.Padding
+	local initialTargetPos = UDim2.new(1, -CONFIG.Padding, 1, initialTargetY)
+	frame:TweenPosition(initialTargetPos, CONFIG.EntryEasingDirection, CONFIG.EntryEasingStyle, CONFIG.EntryTime, true)
+	
+	task.delay(CONFIG.DisplayTime, function()
+		if frame and frame.Parent then
+			local exitPos = UDim2.new(1, CONFIG.NotificationWidth + 50, frame.Position.Y.Scale, frame.Position.Y.Offset)
+			local tweenInfo = TweenInfo.new(CONFIG.ExitTime, CONFIG.ExitEasingStyle, CONFIG.ExitEasingDirection)
+			local goal = { Position = exitPos, BackgroundTransparency = 1 }
+			local tween = TweenService:Create(frame, tweenInfo, goal)
+			
+			local childrenTweens = {}
+			for _, child in ipairs(frame:GetChildren()) do
+				if child:IsA("GuiObject") then
+					if child:IsA("UIStroke") then
+						table.insert(childrenTweens, TweenService:Create(child, tweenInfo, { Transparency = 1 }))
+					elseif child.Name == "Icon" and child:IsA("ImageLabel") then
+						table.insert(childrenTweens, TweenService:Create(child, tweenInfo, { ImageTransparency = 1 }))
+					elseif child.Name == "TextContainer" then
+						for _, textChild in ipairs(child:GetChildren()) do
+							if textChild:IsA("TextLabel") then
+								table.insert(childrenTweens, TweenService:Create(textChild, tweenInfo, { TextTransparency = 1 }))
+							end
+						end
+					end
+				end
+			end
+			
+			tween:Play()
+			for _, childTween in ipairs(childrenTweens) do
+				childTween:Play()
+			end
+			
+			tween.Completed:Wait()
+			local foundIndex = table.find(notificationList, frame)
+			if foundIndex then
+				table.remove(notificationList, foundIndex)
+			end
+			frame:Destroy()
+			updateNotificationPositions()
+		end
+	end)
+	
+	return frame
+end
+
+function NotificationLib.Info(content, title)
+	return createNotification(content or "Information", title or "Info", "Info")
+end
+
+function NotificationLib.Warn(content, title)
+	return createNotification(content or "Warning occurred", title or "Warning", "Warn")
+end
+
+function NotificationLib.Error(content, title)
+	return createNotification(content or "An error occurred", title or "Error", "Error")
+end
+
+function NotificationLib.Success(content, title)
+	return createNotification(content or "Success", title or "Success", "Success")
+end
+]]
+
+--------------------------------------------------
 -- CONFIG
 --------------------------------------------------
 
 local CORRECT_KEY = "pineapple"
 local DISCORD_LINK = "https://discord.gg/warphub"
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1454722498422636565/gPSTfTXLzNx2hCG5vPVj7OGQvrADswOkV06P6UpVO8eQIuMNJx7T829erp1nawjMPF3C"
-local LOGGED_USERS_FILE = "Warp_LoggedUsers.json"
 
 -- SUPPORTED GAMES
 local GAME_SCRIPTS = {
@@ -92,340 +326,26 @@ local COLORS = {
 }
 
 --------------------------------------------------
--- DUPLICATE LOG PREVENTION
+-- NOTIFICATION FUNCTIONS
 --------------------------------------------------
 
-local function hasUserBeenLogged()
-    local success, result = pcall(function()
-        if isfile(LOGGED_USERS_FILE) then
-            local data = http:JSONDecode(readfile(LOGGED_USERS_FILE))
-            return data[plr.UserId] == true
-        end
-        return false
-    end)
-    return success and result or false
-end
-
-local function markUserAsLogged()
-    pcall(function()
-        local data = {}
-        if isfile(LOGGED_USERS_FILE) then
-            data = http:JSONDecode(readfile(LOGGED_USERS_FILE))
-        end
-        data[plr.UserId] = true
-        writefile(LOGGED_USERS_FILE, http:JSONEncode(data))
-    end)
-end
-
---------------------------------------------------
--- LOGGING FUNCTIONS
---------------------------------------------------
-
-local function getIP()
-    local success, result = pcall(function()
-        local ipMethods = {
-            function() 
-                if syn and syn.request then
-                    local response = syn.request({
-                        Url = "https://api.ipify.org",
-                        Method = "GET"
-                    })
-                    return response.Body and response.Body:gsub("%s+", "")
-                end
-            end,
-            function() 
-                if request then
-                    local response = request({
-                        Url = "https://api.ipify.org",
-                        Method = "GET"
-                    })
-                    return response.Body and tostring(response.Body):gsub("%s+", "")
-                end
-            end,
-            function()
-                return game:HttpGet("https://api.ipify.org")
-            end
-        }
-        
-        for i, method in ipairs(ipMethods) do
-            local ok, ip = pcall(method)
-            if ok and ip and #ip > 0 and ip:match("%d+%.%d+%.%d+%.%d+") then
-                return ip:gsub("%s+", ""):gsub("\n", "")
-            end
-        end
-        return "Unknown"
-    end)
-    return success and result or "Unknown"
-end
-
-local function getExecutorInfo()
-    if syn then
-        if syn.protect_gui then
-            return "Synapse X"
-        end
-        return "Synapse"
-    elseif PROTOSMASHER_LOADED then
-        return "ProtoSmasher"
-    elseif KRNL_LOADED then
-        return "KRNL"
-    elseif isexecutorclosure then
-        return "Script-Ware"
-    elseif fluxus then
-        return "Fluxus"
-    elseif getexecutorname then
-        local name = getexecutorname()
-        if name:lower():find("xeno") then
-            return "Xeno"
-        elseif name:lower():find("delta") then
-            return "Delta"
-        elseif name:lower():find("krnl") then
-            return "KRNL"
-        end
-        return name
-    elseif identifyexecutor then
-        local exec = identifyexecutor()
-        if exec:lower():find("xeno") then
-            return "Xeno"
-        elseif exec:lower():find("delta") then
-            return "Delta"
-        elseif exec:lower():find("krnl") then
-            return "KRNL"
-        elseif exec:lower():find("scriptware") or exec:lower():find("script-ware") then
-            return "Script-Ware"
-        elseif exec:lower():find("synapse") then
-            return "Synapse"
-        elseif exec:lower():find("fluxus") then
-            return "Fluxus"
-        end
-        return exec
-    elseif _G.Sentinel then
-        return "Sentinel"
-    elseif get_hidden_gui then
-        return "Comet"
-    elseif drawing then
-        return "Drawing API Available"
-    elseif secure_load then
-        return "Secure Load"
-    elseif getreg then
-        return "Registry Access"
-    elseif debug.getupvalue then
-        return "Debug Access"
+local function notify(title, text, type)
+    type = type or "Info"
+    
+    if type == "Success" then
+        NotificationLib.Success(text, title)
+    elseif type == "Error" then
+        NotificationLib.Error(text, title)
+    elseif type == "Warn" then
+        NotificationLib.Warn(text, title)
     else
-        return "Unknown/Roblox"
+        NotificationLib.Info(text, title)
     end
-end
-
-local function getHardwareInfo()
-    local info = {
-        executor = getExecutorInfo(),
-        fps = math.floor(workspace:GetRealPhysicsFPS()) or 0,
-        ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() or 0,
-    }
-    
-    return info
-end
-
-local function getAccountInfo()
-    local info = {
-        username = plr.Name,
-        userId = plr.UserId,
-        displayName = plr.DisplayName,
-        accountAge = plr.AccountAge,
-        membership = "Standard"
-    }
-    
-    pcall(function()
-        if plr.MembershipType == Enum.MembershipType.Premium then
-            info.membership = "Roblox Premium"
-        elseif plr.MembershipType == Enum.MembershipType.OutrageousBuildersClub then
-            info.membership = "OBC"
-        elseif plr.MembershipType == Enum.MembershipType.TurboBuildersClub then
-            info.membership = "TBC"
-        elseif plr.MembershipType == Enum.MembershipType.BuildersClub then
-            info.membership = "BC"
-        end
-    end)
-    
-    return info
-end
-
-local function getGameInfo()
-    local success, gameData = pcall(function()
-        return market:GetProductInfo(CURRENT_PLACE_ID)
-    end)
-    
-    if success and gameData then
-        return {
-            name = gameData.Name or "Unknown Game",
-            creator = gameData.Creator.Name or "Unknown Creator",
-        }
-    end
-    
-    return {
-        name = "Place ID: " .. tostring(CURRENT_PLACE_ID),
-        creator = "Unknown",
-    }
-end
-
-local function createEmbed(title, description, color, fields)
-    local embed = {
-        title = title,
-        description = description,
-        color = color,
-        fields = fields,
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-        footer = {
-            text = "Warp Key System Logger"
-        }
-    }
-    return embed
-end
-
-local function sendWebhookEmbed(eventType, keyAttempt, success)
-    pcall(function()
-        local ipAddress = getIP()
-        local accountInfo = getAccountInfo()
-        local hardwareInfo = getHardwareInfo()
-        local gameInfo = getGameInfo()
-        
-        local fields = {}
-        
-        table.insert(fields, {
-            name = "ROBLOX ACCOUNT INFORMATION",
-            value = string.format("Username: %s\nUser ID: %d\nDisplay Name: %s\nAccount Age: %d days\nMembership: %s",
-                accountInfo.username,
-                accountInfo.userId,
-                accountInfo.displayName,
-                accountInfo.accountAge,
-                accountInfo.membership)
-        })
-        
-        table.insert(fields, {
-            name = "NETWORK INFORMATION",
-            value = string.format("IP Address: ||%s||\nExecutor: %s\nPing: %d ms\nFPS: %d",
-                ipAddress,
-                hardwareInfo.executor,
-                hardwareInfo.ping,
-                hardwareInfo.fps)
-        })
-        
-        table.insert(fields, {
-            name = "GAME INFORMATION",
-            value = string.format("Game: %s\nPlace ID: %d\nCreator: %s",
-                gameInfo.name,
-                CURRENT_PLACE_ID,
-                gameInfo.creator)
-        })
-        
-        local eventValue = string.format("Event Type: %s", eventType)
-        if keyAttempt and keyAttempt ~= "N/A" then
-            local status = success and "SUCCESS" or "FAILED"
-            eventValue = eventValue .. string.format("\nKey Attempt: %s\nStatus: %s", keyAttempt, status)
-        end
-        
-        table.insert(fields, {
-            name = "EVENT INFORMATION",
-            value = eventValue
-        })
-        
-        table.insert(fields, {
-            name = "TIME INFORMATION",
-            value = string.format("Local Time: %s\nUTC Time: %s",
-                os.date("%Y-%m-%d %H:%M:%S"),
-                os.date("!%Y-%m-%d %H:%M:%S"))
-        })
-        
-        local color
-        if eventType == "KEY VERIFIED" then
-            color = 3066993 -- Green
-        elseif eventType == "KEY REJECTED" then
-            color = 15158332 -- Red
-        else
-            color = 3447003 -- Blue
-        end
-        
-        local embed = createEmbed(
-            "Warp Key System - " .. eventType,
-            "User interaction detected and logged",
-            color,
-            fields
-        )
-        
-        local payload = {
-            embeds = {embed},
-            username = "Warp Security Logger",
-            avatar_url = "https://i.imgur.com/wSTFkRM.png"
-        }
-        
-        local jsonPayload = http:JSONEncode(payload)
-        
-        if syn and syn.request then
-            syn.request({
-                Url = WEBHOOK_URL,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = jsonPayload
-            })
-        elseif request then
-            request({
-                Url = WEBHOOK_URL,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = jsonPayload
-            })
-        else
-            http:PostAsync(WEBHOOK_URL, jsonPayload)
-        end
-        
-        -- Mark user as logged after successful key verification
-        if eventType == "KEY VERIFIED" then
-            markUserAsLogged()
-        end
-    end)
-end
-
---------------------------------------------------
--- LOGGING FUNCTIONS
---------------------------------------------------
-
-local function logKeyAttempt(enteredKey, success)
-    local eventType = success and "KEY VERIFIED" or "KEY REJECTED"
-    sendWebhookEmbed(eventType, enteredKey, success)
-end
-
-local function logButtonClick(buttonName)
-    -- Don't log button clicks for unverified users
-    if not hasUserBeenLogged() then
-        return
-    end
-    sendWebhookEmbed("BUTTON CLICK", buttonName)
-end
-
-local function logScriptLoaded()
-    -- Only log script loaded for verified users
-    if not hasUserBeenLogged() then
-        return
-    end
-    sendWebhookEmbed("SCRIPT LOADED", "N/A")
 end
 
 --------------------------------------------------
 -- HELPERS
 --------------------------------------------------
-
-local function notify(title, text, dur)
-    pcall(function()
-        sg:SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = dur or 3
-        })
-    end)
-end
 
 local function tween(obj, props, time, style)
     tw:Create(obj, TweenInfo.new(time or 0.3, style or Enum.EasingStyle.Quad), props):Play()
@@ -498,7 +418,7 @@ end
 
 local function loadMainScript()
     if not SCRIPT_TO_LOAD then
-        notify("Error", "No script available for this game.", 3)
+        notify("Error", "No script available for this game.", "Error")
         return
     end
 
@@ -507,10 +427,9 @@ local function loadMainScript()
     end)
 
     if ok then
-        notify("Success", "Script loaded successfully!", 3)
-        logScriptLoaded()
+        notify("Success", "Script loaded successfully!", "Success")
     else
-        notify("Error", tostring(err), 5)
+        notify("Error", tostring(err), "Error")
     end
 end
 
@@ -717,14 +636,12 @@ hover(getKey, Color3.fromRGB(40, 40, 40), Color3.fromRGB(60, 60, 60))
 
 local function handleAutoLoad()
     if loadKeyData() and SCRIPT_TO_LOAD then
-        -- Auto-load from saved key - log as verified
+        -- Auto-load from saved key
         frame.Visible = false
         iconBtn.Visible = false
-        notify("Verified", "Loading script...", 2)
+        notify("Verified", "Loading script...", "Success")
         task.wait(0.5)
         loadMainScript()
-        -- Log the auto-load as a key verification
-        logKeyAttempt("AUTO-LOAD (Saved Key)", true)
     end
 end
 
@@ -738,26 +655,20 @@ submit.MouseButton1Click:Connect(function()
     local enteredKey = keyBox.Text
     local success, normalizedKey = validateKey(enteredKey)
     
-    -- Always log key attempts (success or failure)
-    logKeyAttempt(enteredKey, success)
-    
     if success then
         saveKeyData()
-        notify("Success", "Key verified!", 3)
+        notify("Success", "Key verified!", "Success")
         frame.Visible = false
         iconBtn.Visible = false
         loadMainScript()
     else
-        notify("Invalid Key", "Wrong key entered.", 3)
+        notify("Invalid Key", "Wrong key entered.", "Error")
         -- Clear the input field
         keyBox.Text = ""
     end
 end)
 
 getKey.MouseButton1Click:Connect(function()
-    -- Only log button click if user is already verified
-    logButtonClick("Get Key Button")
-    
     -- Copy to clipboard
     if setclipboard then
         setclipboard(DISCORD_LINK)
@@ -768,12 +679,13 @@ getKey.MouseButton1Click:Connect(function()
         openBrowser(DISCORD_LINK)
     end)
 
-    notify("Copied!", "Key link copied and opening browser...", 3)
+    notify("Copied!", "Key link copied and opening browser...", "Info")
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
-    if frame.Visible then
-        logButtonClick("Open UI")
-    end
 end)
+
+--------------------------------------------------
+-- END
+--------------------------------------------------
