@@ -243,7 +243,7 @@ end
 -- CONFIG
 --------------------------------------------------
 
-local CORRECT_KEY = "pineapple"
+local CORRECT_KEY = "warpscripts"
 local DISCORD_LINK = "https://discord.com/invite/warphub"
 
 -- SUPPORTED GAMES
