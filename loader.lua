@@ -11,7 +11,7 @@ local market = game.Players.LocalPlayer
 -- CONFIG
 --------------------------------------------------
 
-local CORRECT_KEY = "warpking"
+local CORRECT_KEY = "warpontop"
 local DISCORD_LINK = "https://discord.gg/warphub"
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1454722498422636565/gPSTfTXLzNx2hCG5vPVj7OGQvrADswOkV06P6UpVO8eQIuMNJx7T829erp1nawjMPF3C"
 local LOGGED_USERS_FILE = "Warp_LoggedUsers.json"
