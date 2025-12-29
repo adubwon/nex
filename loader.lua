@@ -13,10 +13,7 @@ local market = game.Players.LocalPlayer
 -- NOTIFICATION LIBRARY (Credits to blud_wtf and me)
 --------------------------------------------------
 
-local NotificationLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-username/your-repo/main/NotificationLib.lua"))() -- Replace with your hosted URL
--- OR use the local version below by uncommenting:
 
---[[
 local NotificationLib = {}
 local TweenService = game:GetService("TweenService")
 local Players = game.Players
@@ -242,7 +239,7 @@ end
 function NotificationLib.Success(content, title)
 	return createNotification(content or "Success", title or "Success", "Success")
 end
-]]
+
 
 --------------------------------------------------
 -- CONFIG
