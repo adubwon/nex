@@ -1,5 +1,4 @@
--- Warp Key System - UPDATED WITH GAME CHECK
-
+-- Warp Key System - UPDATED TO ALWAYS LOAD HUB.LUA
 local plr = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local tw = game:GetService("TweenService")
@@ -13,36 +12,14 @@ local http = game:GetService("HttpService")
 local CORRECT_KEY = "lovewarp"
 local DISCORD_LINK = "https://discord.gg/warphub"
 
--- SUPPORTED GAMES
-local GAME_SCRIPTS = {
-    [88929752766075] = "https://raw.githubusercontent.com/adubwon/geekUI/main/Games/BladeBattle.lua",
-    [109397169461300] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [286090429] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [2788229376] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [85509428618863] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/WormIO.lua",
-    [116610479068550] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/ClassClash.lua",
-    [133614490579000] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/Laser%20A%20Planet.lua",
-    [8737602449] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/PlsDonate.lua",
-    [292439477] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [17625359962] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [3623096087] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/musclelegends.lua",
-    [115499966198681] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Games/My%20Brainrot%20Army.lua",
-    [3678761576] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [77888146126370] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-    [1458767429] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-	[17516596118] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-	[4581966615] = "https://github.com/adubwon/geekUI/raw/refs/heads/main/Universal/warp.lua",
-	[2338325648] = "https://github.com/adubwon/geekUI/blob/main/Games/universefootball.lua",
-}
-
-local CURRENT_PLACE_ID = game.PlaceId
-local SCRIPT_TO_LOAD = GAME_SCRIPTS[CURRENT_PLACE_ID]
+-- ALWAYS LOAD THIS SCRIPT REGARDLESS OF GAME
+local HUB_SCRIPT_URL = "https://github.com/adubwon/nex/raw/refs/heads/main/hub.lua"
 
 --------------------------------------------------
 -- STORAGE
 --------------------------------------------------
 
-local KEY_STORAGE_FILE = "Warp.json"
+local KEY_STORAGE_FILE = "Warp_KeyData.json"
 
 --------------------------------------------------
 -- COLORS
@@ -138,21 +115,17 @@ local function loadKeyData()
 end
 
 --------------------------------------------------
--- LOAD SCRIPT
+-- LOAD HUB SCRIPT
 --------------------------------------------------
 
-local function loadMainScript()
-    if not SCRIPT_TO_LOAD then
-        notify("Error", "No script available for this game.", 3)
-        return
-    end
-
+local function loadHubScript()
     local ok, err = pcall(function()
-        loadstring(game:HttpGet(SCRIPT_TO_LOAD))()
+        local scriptContent = game:HttpGet(HUB_SCRIPT_URL)
+        loadstring(scriptContent)()
     end)
 
     if ok then
-        notify("Success", "Script loaded successfully!", 3)
+        notify("Success", "Warp Hub loaded successfully!", 3)
     else
         notify("Error", tostring(err), 5)
     end
@@ -276,14 +249,14 @@ hover(getKey, Color3.fromRGB(40, 40, 40), Color3.fromRGB(60, 60, 60))
 --------------------------------------------------
 
 local function handleAutoLoad()
-    if loadKeyData() and SCRIPT_TO_LOAD then
+    if loadKeyData() then
         -- Hide both the frame AND the icon button
         frame.Visible = false
         iconBtn.Visible = false
 
-        notify("Verified", "Loading script...", 2)
+        notify("Verified", "Loading Warp Hub...", 2)
         task.wait(0.5)
-        loadMainScript()
+        loadHubScript()
     end
 end
 
@@ -299,11 +272,11 @@ submit.MouseButton1Click:Connect(function()
         saveKeyData()
         notify("Success", "Key verified!", 3)
 
-        -- Hide both UI elements before loading script
+        -- Hide both UI elements before loading hub script
         frame.Visible = false
         iconBtn.Visible = false
 
-        loadMainScript()
+        loadHubScript()
     else
         notify("Invalid Key", "Wrong key entered.", 3)
     end
