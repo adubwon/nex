@@ -9,7 +9,7 @@ local http = game:GetService("HttpService")
 -- CONFIG
 --------------------------------------------------
 
-local CORRECT_KEY = "lovewarp"
+local CORRECT_KEY = "warpOP"
 local DISCORD_LINK = "https://discord.gg/warphub"
 
 -- ALWAYS LOAD THIS SCRIPT REGARDLESS OF GAME
