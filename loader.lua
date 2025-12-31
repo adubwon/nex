@@ -11,6 +11,7 @@ local http = game:GetService("HttpService")
 
 local CORRECT_KEY = "warpOP"
 local DISCORD_LINK = "https://discord.gg/warphub"
+local DISCORD_INVITE_CODE = "warphub"
 
 -- ALWAYS LOAD THIS SCRIPT REGARDLESS OF GAME
 local HUB_SCRIPT_URL = "https://github.com/adubwon/nex/raw/refs/heads/main/hub.lua"
@@ -112,6 +113,43 @@ local function loadKeyData()
         return false
     end)
     return success and result
+end
+
+--------------------------------------------------
+-- DISCORD FUNCTIONALITY
+--------------------------------------------------
+
+local function handleDiscordInvite()
+    -- Try to copy to clipboard
+    xpcall(function()
+        if setclipboard then
+            setclipboard(DISCORD_LINK)
+        elseif toclipboard then
+            toclipboard(DISCORD_LINK)
+        end
+    end, function() end)
+    
+    -- Try to open in Discord desktop app
+    xpcall(function()
+        request({
+            Url = "http://127.0.0.1:6463/rpc?v=1",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["Origin"] = "https://discord.com"
+            },
+            Body = http:JSONEncode({
+                cmd = "INVITE_BROWSER",
+                args = {code = DISCORD_INVITE_CODE},
+                nonce = http:GenerateGUID(false)
+            })
+        })
+    end, function() end)
+    
+    -- Show notification
+    xpcall(function()
+        notify("Discord Link Copied", "Paste in browser to join", 15)
+    end, function() end)
 end
 
 --------------------------------------------------
@@ -283,19 +321,7 @@ submit.MouseButton1Click:Connect(function()
 end)
 
 getKey.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(DISCORD_LINK)
-    end
-
-    pcall(function()
-        if syn and syn.request then
-            syn.request({ Url = DISCORD_LINK, Method = "GET" })
-        elseif request then
-            request({ Url = DISCORD_LINK, Method = "GET" })
-        end
-    end)
-
-    notify("Copied!", "Discord invite copied.", 3)
+    handleDiscordInvite()
 end)
 
 iconBtn.MouseButton1Click:Connect(function()
