@@ -20,7 +20,7 @@ local HttpService = game:GetService("HttpService")
 --================================================================================--
 local Config = {
     -- Key System Settings
-    CORRECT_KEY = "sigmawarp",
+    local CORRECT_KEY = "warphub",
     DISCORD_LINK = "https://discord.gg/warphub",
     DISCORD_INVITE_CODE = "warphub",
     
