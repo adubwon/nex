@@ -177,7 +177,7 @@ function WarpHub:CreateWindow(title)
     titleContainer.BackgroundTransparency = 1
     
     local windowTitle = Instance.new("TextLabel")
-    windowTitle.Size = UDim2.new(1, -16, 0.6, 0)
+    windowTitle.Size = UDim2.new(1, -16, 0.8, 0)
     windowTitle.Position = UDim2.new(0, 12, 0, 4)
     windowTitle.BackgroundTransparency = 1
     windowTitle.Text = title or "WARP HUB"
@@ -192,16 +192,6 @@ function WarpHub:CreateWindow(title)
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
     })
     titleGlow.Parent = windowTitle
-    
-    local subtitle = Instance.new("TextLabel")
-    subtitle.Size = UDim2.new(1, -16, 0.4, 0)
-    subtitle.Position = UDim2.new(0, 12, 0.6, 0)
-    subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Executor UI"
-    subtitle.TextColor3 = WarpHub.AccentColor
-    subtitle.TextSize = 11
-    subtitle.Font = Enum.Font.GothamBold
-    subtitle.TextXAlignment = Enum.TextXAlignment.Left
     
     -- Minimize button (no background)
     self.MinimizeButton = Instance.new("ImageButton")
@@ -237,6 +227,7 @@ function WarpHub:CreateWindow(title)
     self.ContentScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
     self.ContentScrolling.ScrollBarImageTransparency = 0.5
     self.ContentScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
+    self.ContentScrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
     self.ContentScrolling.Parent = self.ContentArea
     
     self.SidebarTabs = Instance.new("Frame")
@@ -246,7 +237,6 @@ function WarpHub:CreateWindow(title)
     self.SidebarTabs.Parent = self.Sidebar
     
     windowTitle.Parent = titleContainer
-    subtitle.Parent = titleContainer
     titleContainer.Parent = self.TopBar
     self.MinimizeButton.Parent = self.TopBar
     self.CloseButton.Parent = self.TopBar
@@ -468,6 +458,11 @@ function WarpHub:AddTab(name)
     TabContent.Visible = false
     TabContent.Parent = self.ContentScrolling
     
+    local TabContentList = Instance.new("UIListLayout")
+    TabContentList.Padding = UDim.new(0, 6)
+    TabContentList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabContentList.Parent = TabContent
+    
     TabButton.Parent = self.SidebarTabs
     TabContent.Parent = self.ContentScrolling
     
@@ -532,8 +527,9 @@ function WarpHub:AddTab(name)
         local section = {}
         
         local Section = createGlassFrame(nil, UDim2.new(1, -12, 0, 40), 
-            UDim2.new(0, 6, 0, #TabContent:GetChildren() * 48 + 6), 0.08)
+            UDim2.new(0, 6, 0, 0), 0.08)
         Section.BackgroundColor3 = WarpHub.GlassColor
+        Section.LayoutOrder = #TabContent:GetChildren() + 1
         
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Size = UDim2.new(1, -16, 1, 0)
@@ -547,13 +543,13 @@ function WarpHub:AddTab(name)
         
         titleLabel.Parent = Section
         Section.Parent = TabContent
-        self:updateContentSize()
         
         function section:AddButton(name, callback)
             local Button = createGlassFrame(nil, UDim2.new(1, -12, 0, 36), 
-                UDim2.new(0, 6, 0, #TabContent:GetChildren() * 44 + 6), 0.12)
+                UDim2.new(0, 6, 0, 0), 0.12)
             Button.BackgroundColor3 = WarpHub.GlassColor
             Button.AutoButtonColor = false
+            Button.LayoutOrder = #TabContent:GetChildren() + 1
             
             local buttonText = Instance.new("TextLabel")
             buttonText.Size = UDim2.new(1, -16, 1, 0)
@@ -587,15 +583,15 @@ function WarpHub:AddTab(name)
             end)
             
             Button.Parent = TabContent
-            self:updateContentSize()
             return Button
         end
         
         function section:AddSlider(name, min, max, default, callback)
             local Slider = Instance.new("Frame")
             Slider.Size = UDim2.new(1, -12, 0, 52)
-            Slider.Position = UDim2.new(0, 6, 0, #TabContent:GetChildren() * 60 + 6)
+            Slider.Position = UDim2.new(0, 6, 0, 0)
             Slider.BackgroundTransparency = 1
+            Slider.LayoutOrder = #TabContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -50, 0, 20)
@@ -689,15 +685,15 @@ function WarpHub:AddTab(name)
             track.Parent = Slider
             Slider.Parent = TabContent
             
-            self:updateContentSize()
             return Slider
         end
         
         function section:AddToggle(name, default, callback)
             local Toggle = Instance.new("Frame")
             Toggle.Size = UDim2.new(1, -12, 0, 36)
-            Toggle.Position = UDim2.new(0, 6, 0, #TabContent:GetChildren() * 44 + 6)
+            Toggle.Position = UDim2.new(0, 6, 0, 0)
             Toggle.BackgroundTransparency = 1
+            Toggle.LayoutOrder = #TabContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -756,15 +752,58 @@ function WarpHub:AddTab(name)
             Toggle.Parent = TabContent
             
             updateToggle()
-            self:updateContentSize()
             return Toggle
         end
         
         function section:AddDivider(text)
             local divider = self:createSectionDivider(text)
+            divider.LayoutOrder = #TabContent:GetChildren() + 1
             divider.Parent = TabContent
-            self:updateContentSize()
             return divider
+        end
+        
+        function section:AddTextBox(name, placeholder, callback)
+            local TextBox = Instance.new("Frame")
+            TextBox.Size = UDim2.new(1, -12, 0, 36)
+            TextBox.Position = UDim2.new(0, 6, 0, 0)
+            TextBox.BackgroundTransparency = 1
+            TextBox.LayoutOrder = #TabContent:GetChildren() + 1
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = name
+            label.TextColor3 = WarpHub.TextColor
+            label.TextSize = 13
+            label.Font = Enum.Font.GothamMedium
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = TextBox
+            
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0.55, 0, 0.7, 0)
+            inputBox.Position = UDim2.new(0.4, 0, 0.15, 0)
+            inputBox.BackgroundColor3 = WarpHub.GlassColor
+            inputBox.BackgroundTransparency = 0.2
+            inputBox.TextColor3 = WarpHub.TextColor
+            inputBox.Text = ""
+            inputBox.TextSize = 12
+            inputBox.Font = Enum.Font.GothamMedium
+            inputBox.PlaceholderText = placeholder or "Enter text..."
+            inputBox.PlaceholderColor3 = WarpHub.SubTextColor
+            
+            local inputCorner = Instance.new("UICorner")
+            inputCorner.CornerRadius = UDim.new(0, 6)
+            inputCorner.Parent = inputBox
+            
+            inputBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed and callback then
+                    callback(inputBox.Text)
+                end
+            end)
+            
+            inputBox.Parent = TextBox
+            TextBox.Parent = TabContent
+            return TextBox
         end
         
         return section
