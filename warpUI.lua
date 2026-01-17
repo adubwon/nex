@@ -436,8 +436,15 @@ function WarpHub:AddTab(name)
     local buttonHeight = 38
     local buttonFontSize = 13
     
+    -- Store reference to self for use in closures
+    local windowInstance = self
+    
+    -- Calculate button position based on number of existing tabs
+    local tabCount = #self.SidebarTabs:GetChildren()
+    local buttonPosition = UDim2.new(0, 5, 0, 5 + (tabCount * (buttonHeight + 6)))
+    
     local TabButton = createGlassFrame(nil, UDim2.new(1, -10, 0, buttonHeight), 
-        UDim2.new(0, 5, 0, (#self.SidebarTabs:GetChildren() * (buttonHeight + 6)) + 5), 0.15)
+        buttonPosition, 0.15)
     TabButton.BackgroundColor3 = WarpHub.GlassColor
     TabButton.AutoButtonColor = false
     
@@ -452,22 +459,35 @@ function WarpHub:AddTab(name)
     buttonText.TextXAlignment = Enum.TextXAlignment.Left
     buttonText.Parent = TabButton
     
-    local TabContent = Instance.new("Frame")
+    -- Create TabContent as a scrolling frame directly
+    local TabContent = Instance.new("ScrollingFrame")
     TabContent.Size = UDim2.new(1, 0, 1, 0)
     TabContent.BackgroundTransparency = 1
     TabContent.Visible = false
-    TabContent.Parent = self.ContentScrolling
+    TabContent.ScrollBarThickness = 4
+    TabContent.ScrollBarImageColor3 = WarpHub.AccentColor
+    TabContent.ScrollBarImageTransparency = 0.5
+    TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
     
     local TabContentList = Instance.new("UIListLayout")
-    TabContentList.Padding = UDim.new(0, 6)
+    TabContentList.Padding = UDim.new(0, 8)
     TabContentList.SortOrder = Enum.SortOrder.LayoutOrder
     TabContentList.Parent = TabContent
     
     TabButton.Parent = self.SidebarTabs
     TabContent.Parent = self.ContentScrolling
     
-    table.insert(self.tabs, {button = TabButton, content = TabContent, text = buttonText})
+    -- Store tab data properly
+    local tabData = {
+        button = TabButton, 
+        content = TabContent, 
+        text = buttonText,
+        name = name
+    }
+    table.insert(self.tabs, tabData)
     
+    -- Function to select this tab
     local function selectTab()
         for _, tabData in pairs(self.tabs) do
             tabData.content.Visible = false
@@ -480,6 +500,7 @@ function WarpHub:AddTab(name)
             }):Play()
         end
         
+        -- Show this tab's content
         TabContent.Visible = true
         TweenService:Create(TabButton, TweenInfo.new(0.25), {
             BackgroundTransparency = 0.06,
@@ -489,9 +510,11 @@ function WarpHub:AddTab(name)
             TextColor3 = Color3.fromRGB(255, 255, 255)
         }):Play()
         
-        self:updateContentSize()
+        -- Update content size
+        windowInstance:updateContentSize()
     end
     
+    -- Connect button events
     TabButton.MouseEnter:Connect(function()
         if self.isClosing then return end
         if not TabContent.Visible then
@@ -518,11 +541,13 @@ function WarpHub:AddTab(name)
     
     TabButton.MouseButton1Click:Connect(selectTab)
     
+    -- Select first tab automatically
     if #self.tabs == 1 then
         task.wait(0.5)
         selectTab()
     end
     
+    -- Define tab methods
     function tab:AddSection(title)
         local section = {}
         
@@ -544,12 +569,25 @@ function WarpHub:AddTab(name)
         titleLabel.Parent = Section
         Section.Parent = TabContent
         
+        -- Create a container for section elements
+        local SectionContainer = Instance.new("Frame")
+        SectionContainer.Size = UDim2.new(1, 0, 0, 0)
+        SectionContainer.BackgroundTransparency = 1
+        SectionContainer.LayoutOrder = #TabContent:GetChildren() + 1
+        
+        local SectionList = Instance.new("UIListLayout")
+        SectionList.Padding = UDim.new(0, 6)
+        SectionList.SortOrder = Enum.SortOrder.LayoutOrder
+        SectionList.Parent = SectionContainer
+        
+        SectionContainer.Parent = TabContent
+        
         function section:AddButton(name, callback)
             local Button = createGlassFrame(nil, UDim2.new(1, -12, 0, 36), 
-                UDim2.new(0, 6, 0, 0), 0.12)
+                UDim2.new(0, 0, 0, 0), 0.12)
             Button.BackgroundColor3 = WarpHub.GlassColor
             Button.AutoButtonColor = false
-            Button.LayoutOrder = #TabContent:GetChildren() + 1
+            Button.LayoutOrder = #SectionContainer:GetChildren()
             
             local buttonText = Instance.new("TextLabel")
             buttonText.Size = UDim2.new(1, -16, 1, 0)
@@ -567,7 +605,7 @@ function WarpHub:AddTab(name)
             end)
             
             Button.MouseEnter:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 TweenService:Create(Button, TweenInfo.new(0.15), {
                     BackgroundTransparency = 0.05,
                     BackgroundColor3 = WarpHub.AccentColor
@@ -575,23 +613,24 @@ function WarpHub:AddTab(name)
             end)
             
             Button.MouseLeave:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 TweenService:Create(Button, TweenInfo.new(0.15), {
                     BackgroundTransparency = 0.12,
                     BackgroundColor3 = WarpHub.GlassColor
                 }):Play()
             end)
             
-            Button.Parent = TabContent
+            Button.Parent = SectionContainer
+            windowInstance:updateContentSize()
             return Button
         end
         
         function section:AddSlider(name, min, max, default, callback)
             local Slider = Instance.new("Frame")
             Slider.Size = UDim2.new(1, -12, 0, 52)
-            Slider.Position = UDim2.new(0, 6, 0, 0)
+            Slider.Position = UDim2.new(0, 0, 0, 0)
             Slider.BackgroundTransparency = 1
-            Slider.LayoutOrder = #TabContent:GetChildren() + 1
+            Slider.LayoutOrder = #SectionContainer:GetChildren()
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -50, 0, 20)
@@ -650,7 +689,7 @@ function WarpHub:AddTab(name)
             end
             
             handle.MouseButton1Down:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 sliding = true
                 TweenService:Create(handle, TweenInfo.new(0.1), {
                     Size = UDim2.new(0, 18, 0, 18)
@@ -683,17 +722,18 @@ function WarpHub:AddTab(name)
             fill.Parent = track
             handle.Parent = track
             track.Parent = Slider
-            Slider.Parent = TabContent
+            Slider.Parent = SectionContainer
             
+            windowInstance:updateContentSize()
             return Slider
         end
         
         function section:AddToggle(name, default, callback)
             local Toggle = Instance.new("Frame")
             Toggle.Size = UDim2.new(1, -12, 0, 36)
-            Toggle.Position = UDim2.new(0, 6, 0, 0)
+            Toggle.Position = UDim2.new(0, 0, 0, 0)
             Toggle.BackgroundTransparency = 1
-            Toggle.LayoutOrder = #TabContent:GetChildren() + 1
+            Toggle.LayoutOrder = #SectionContainer:GetChildren()
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -728,20 +768,20 @@ function WarpHub:AddTab(name)
             end
             
             toggleButton.MouseButton1Click:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 toggleState = not toggleState
                 updateToggle()
             end)
             
             toggleButton.MouseEnter:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 TweenService:Create(toggleButton, TweenInfo.new(0.1), {
                     Size = UDim2.new(0, 42, 0, 22)
                 }):Play()
             end)
             
             toggleButton.MouseLeave:Connect(function()
-                if self.isClosing then return end
+                if windowInstance.isClosing then return end
                 TweenService:Create(toggleButton, TweenInfo.new(0.1), {
                     Size = UDim2.new(0, 40, 0, 20)
                 }):Play()
@@ -749,25 +789,27 @@ function WarpHub:AddTab(name)
             
             label.Parent = Toggle
             toggleButton.Parent = Toggle
-            Toggle.Parent = TabContent
+            Toggle.Parent = SectionContainer
             
             updateToggle()
+            windowInstance:updateContentSize()
             return Toggle
         end
         
         function section:AddDivider(text)
-            local divider = self:createSectionDivider(text)
-            divider.LayoutOrder = #TabContent:GetChildren() + 1
-            divider.Parent = TabContent
+            local divider = windowInstance:createSectionDivider(text)
+            divider.LayoutOrder = #SectionContainer:GetChildren()
+            divider.Parent = SectionContainer
+            windowInstance:updateContentSize()
             return divider
         end
         
         function section:AddTextBox(name, placeholder, callback)
             local TextBox = Instance.new("Frame")
             TextBox.Size = UDim2.new(1, -12, 0, 36)
-            TextBox.Position = UDim2.new(0, 6, 0, 0)
+            TextBox.Position = UDim2.new(0, 0, 0, 0)
             TextBox.BackgroundTransparency = 1
-            TextBox.LayoutOrder = #TabContent:GetChildren() + 1
+            TextBox.LayoutOrder = #SectionContainer:GetChildren()
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.4, 0, 1, 0)
@@ -802,7 +844,8 @@ function WarpHub:AddTab(name)
             end)
             
             inputBox.Parent = TextBox
-            TextBox.Parent = TabContent
+            TextBox.Parent = SectionContainer
+            windowInstance:updateContentSize()
             return TextBox
         end
         
