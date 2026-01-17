@@ -413,624 +413,502 @@ function WarpHub:createSectionDivider(text)
     return divider
 end
 
-function WarpHub:AddTab(name)
-    local tab = {}
-    setmetatable(tab, {__index = self})
+function tab:AddSection(title)
+    local section = {}
     
-    local buttonHeight = 38
-    local buttonFontSize = 13
+    local Section = createGlassFrame(nil, UDim2.new(1, 0, 0, 40), 
+        UDim2.new(0, 0, 0, 0), 0.08)
+    Section.BackgroundColor3 = WarpHub.GlassColor
+    Section.LayoutOrder = #TabScrolling:GetChildren() + 1
     
-    -- Store reference to self for use in closures
-    local windowInstance = self
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -16, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = WarpHub.TextColor
+    titleLabel.TextSize = 15
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Create TabButton as TextButton
-    local TabButton = Instance.new("TextButton")
-    TabButton.Size = UDim2.new(1, -10, 0, buttonHeight)
-    TabButton.BackgroundColor3 = WarpHub.GlassColor
-    TabButton.BackgroundTransparency = 0.15
-    TabButton.AutoButtonColor = false
-    TabButton.Text = ""
-    TabButton.BorderSizePixel = 0
-    TabButton.LayoutOrder = #self.SidebarTabs:GetChildren() + 1
+    titleLabel.Parent = Section
+    Section.Parent = TabScrolling
     
-    -- Add glass effect styling
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 14)
-    corner.Parent = TabButton
+    -- Create a container for section elements
+    local SectionContainer = Instance.new("Frame")
+    SectionContainer.Size = UDim2.new(1, -12, 0, 0)
+    SectionContainer.Position = UDim2.new(0, 6, 0, 40)
+    SectionContainer.BackgroundTransparency = 1
+    SectionContainer.LayoutOrder = #TabScrolling:GetChildren() + 1
     
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(255, 255, 255)
-    stroke.Transparency = 0.9
-    stroke.Thickness = 1.2
-    stroke.Parent = TabButton
+    local SectionList = Instance.new("UIListLayout")
+    SectionList.Padding = UDim.new(0, 6)
+    SectionList.SortOrder = Enum.SortOrder.LayoutOrder
+    SectionList.Parent = SectionContainer
     
-    local buttonText = Instance.new("TextLabel")
-    buttonText.Size = UDim2.new(1, -16, 1, 0)
-    buttonText.Position = UDim2.new(0, 10, 0, 0)
-    buttonText.BackgroundTransparency = 1
-    buttonText.Text = name
-    buttonText.TextColor3 = WarpHub.SubTextColor
-    buttonText.TextSize = buttonFontSize
-    buttonText.Font = Enum.Font.GothamMedium
-    buttonText.TextXAlignment = Enum.TextXAlignment.Left
-    buttonText.Parent = TabButton
+    SectionContainer.Parent = TabScrolling
     
-    -- Create TabContent as a Frame
-    local TabContent = Instance.new("Frame")
-    TabContent.Size = UDim2.new(1, 0, 1, 0)
-    TabContent.BackgroundTransparency = 1
-    TabContent.Visible = false
-    
-    -- Create ScrollingFrame inside TabContent
-    local TabScrolling = Instance.new("ScrollingFrame")
-    TabScrolling.Size = UDim2.new(1, -16, 1, -16)
-    TabScrolling.Position = UDim2.new(0, 8, 0, 8)
-    TabScrolling.BackgroundTransparency = 1
-    TabScrolling.ScrollBarThickness = 4
-    TabScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
-    TabScrolling.ScrollBarImageTransparency = 0.5
-    TabScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
-    TabScrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    
-    local TabList = Instance.new("UIListLayout")
-    TabList.Padding = UDim.new(0, 8)
-    TabList.SortOrder = Enum.SortOrder.LayoutOrder
-    TabList.Parent = TabScrolling
-    
-    TabScrolling.Parent = TabContent
-    
-    -- FIX: Add TabContent to ContentArea instead of ContentScrolling
-    TabButton.Parent = self.SidebarTabs
-    TabContent.Parent = self.ContentArea  -- This is the fix
-    
-    -- Store tab data properly
-    local tabData = {
-        button = TabButton, 
-        content = TabContent, 
-        scrolling = TabScrolling,
-        text = buttonText,
-        name = name
-    }
-    table.insert(self.tabs, tabData)
-    
-    -- Function to select this tab
-    local function selectTab()
-        for _, tData in pairs(self.tabs) do
-            tData.content.Visible = false
-            TweenService:Create(tData.button, TweenInfo.new(0.25), {
-                BackgroundTransparency = 0.15,
+    function section:AddButton(name, callback)
+        local Button = Instance.new("TextButton")
+        Button.Size = UDim2.new(1, 0, 0, 36)
+        Button.BackgroundColor3 = WarpHub.GlassColor
+        Button.BackgroundTransparency = 0.12
+        Button.AutoButtonColor = false
+        Button.Text = ""
+        Button.BorderSizePixel = 0
+        Button.LayoutOrder = #SectionContainer:GetChildren() + 1
+        
+        -- Add glass styling
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 14)
+        buttonCorner.Parent = Button
+        
+        local buttonStroke = Instance.new("UIStroke")
+        buttonStroke.Color = Color3.fromRGB(255, 255, 255)
+        buttonStroke.Transparency = 0.9
+        buttonStroke.Thickness = 1.2
+        buttonStroke.Parent = Button
+        
+        local buttonText = Instance.new("TextLabel")
+        buttonText.Size = UDim2.new(1, -16, 1, 0)
+        buttonText.Position = UDim2.new(0, 10, 0, 0)
+        buttonText.BackgroundTransparency = 1
+        buttonText.Text = name
+        buttonText.TextColor3 = WarpHub.TextColor
+        buttonText.TextSize = 13
+        buttonText.Font = Enum.Font.GothamMedium
+        buttonText.TextXAlignment = Enum.TextXAlignment.Left
+        buttonText.Parent = Button
+        
+        Button.MouseButton1Click:Connect(function()
+            if callback then callback() end
+        end)
+        
+        Button.MouseEnter:Connect(function()
+            if windowInstance.isClosing then return end
+            TweenService:Create(Button, TweenInfo.new(0.15), {
+                BackgroundTransparency = 0.05,
+                BackgroundColor3 = WarpHub.AccentColor
+            }):Play()
+        end)
+        
+        Button.MouseLeave:Connect(function()
+            if windowInstance.isClosing then return end
+            TweenService:Create(Button, TweenInfo.new(0.15), {
+                BackgroundTransparency = 0.12,
                 BackgroundColor3 = WarpHub.GlassColor
             }):Play()
-            TweenService:Create(tData.text, TweenInfo.new(0.25), {
-                TextColor3 = WarpHub.SubTextColor
-            }):Play()
-        end
+        end)
         
-        -- Show this tab's content
-        TabContent.Visible = true
-        TweenService:Create(TabButton, TweenInfo.new(0.25), {
-            BackgroundTransparency = 0.06,
-            BackgroundColor3 = WarpHub.AccentColor
-        }):Play()
-        TweenService:Create(buttonText, TweenInfo.new(0.25), {
-            TextColor3 = Color3.fromRGB(255, 255, 255)
-        }):Play()
-        
-        self.currentTab = tabData
+        Button.Parent = SectionContainer
+        return Button
     end
     
-    -- Connect button events
-    TabButton.MouseEnter:Connect(function()
-        if self.isClosing then return end
-        if TabContent.Visible == false then
-            TweenService:Create(TabButton, TweenInfo.new(0.15), {
-                BackgroundTransparency = 0.1
+    function section:AddSlider(name, min, max, default, callback)
+        local Slider = Instance.new("Frame")
+        Slider.Size = UDim2.new(1, 0, 0, 52)
+        Slider.BackgroundTransparency = 1
+        Slider.LayoutOrder = #SectionContainer:GetChildren() + 1
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -50, 0, 20)
+        label.Position = UDim2.new(0, 0, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = name
+        label.TextColor3 = WarpHub.TextColor
+        label.TextSize = 13
+        label.Font = Enum.Font.GothamMedium
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = Slider
+        
+        local valueLabel = Instance.new("TextLabel")
+        valueLabel.Size = UDim2.new(0, 45, 0, 20)
+        valueLabel.Position = UDim2.new(1, -45, 0, 0)
+        valueLabel.BackgroundTransparency = 1
+        valueLabel.Text = tostring(default)
+        valueLabel.TextColor3 = WarpHub.AccentColor
+        valueLabel.TextSize = 13
+        valueLabel.Font = Enum.Font.GothamBold
+        valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+        valueLabel.Parent = Slider
+        
+        local track = Instance.new("Frame")
+        track.Size = UDim2.new(1, 0, 0, 6)
+        track.Position = UDim2.new(0, 0, 0, 30)
+        track.BackgroundColor3 = WarpHub.GlassColor
+        track.BackgroundTransparency = 0.15
+        track.BorderSizePixel = 0
+        
+        local trackCorner = Instance.new("UICorner")
+        trackCorner.CornerRadius = UDim.new(0, 3)
+        trackCorner.Parent = track
+        
+        local fill = Instance.new("Frame")
+        fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        fill.BackgroundColor3 = WarpHub.AccentColor
+        fill.BackgroundTransparency = 0.1
+        fill.BorderSizePixel = 0
+        
+        local fillCorner = Instance.new("UICorner")
+        fillCorner.CornerRadius = UDim.new(0, 3)
+        fillCorner.Parent = fill
+        
+        local handle = Instance.new("Frame")
+        handle.Size = UDim2.new(0, 16, 0, 16)
+        handle.Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8)
+        handle.BackgroundColor3 = WarpHub.AccentColor
+        handle.BackgroundTransparency = 0.06
+        handle.BorderSizePixel = 0
+        
+        local handleCorner = Instance.new("UICorner")
+        handleCorner.CornerRadius = UDim.new(0, 8)
+        handleCorner.Parent = handle
+        
+        local handleStroke = Instance.new("UIStroke")
+        handleStroke.Color = Color3.fromRGB(255, 255, 255)
+        handleStroke.Transparency = 0.9
+        handleStroke.Thickness = 1.2
+        handleStroke.Parent = handle
+        
+        local sliding = false
+        local currentValue = default
+        
+        local function updateSlider(value)
+            local percent = (value - min) / (max - min)
+            percent = math.clamp(percent, 0, 1)
+            
+            fill.Size = UDim2.new(percent, 0, 1, 0)
+            valueLabel.Text = tostring(math.floor(value))
+            currentValue = math.floor(value)
+            
+            TweenService:Create(handle, TweenInfo.new(0.1), {
+                Position = UDim2.new(percent, -8, 0.5, -8)
             }):Play()
-            TweenService:Create(buttonText, TweenInfo.new(0.15), {
-                TextColor3 = WarpHub.TextColor
-            }):Play()
+            
+            if callback then callback(currentValue) end
         end
-    end)
-    
-    TabButton.MouseLeave:Connect(function()
-        if self.isClosing then return end
-        if TabContent.Visible == false then
-            TweenService:Create(TabButton, TweenInfo.new(0.15), {
-                BackgroundTransparency = 0.15
+        
+        handle.MouseButton1Down:Connect(function()
+            if windowInstance.isClosing then return end
+            sliding = true
+            TweenService:Create(handle, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 18, 0, 18)
             }):Play()
-            TweenService:Create(buttonText, TweenInfo.new(0.15), {
-                TextColor3 = WarpHub.SubTextColor
-            }):Play()
-        end
-    end)
-    
-    TabButton.MouseButton1Click:Connect(selectTab)
-    
-    -- Select first tab automatically
-    if #self.tabs == 1 then
-        task.wait(0.5)
-        selectTab()
+        end)
+        
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                sliding = false
+                TweenService:Create(handle, TweenInfo.new(0.15), {
+                    Size = UDim2.new(0, 16, 0, 16)
+                }):Play()
+            end
+        end)
+        
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            if sliding then
+                local mousePos = UserInputService:GetMouseLocation()
+                local trackPos = track.AbsolutePosition
+                local trackSize = track.AbsoluteSize
+                
+                local relativeX = (mousePos.X - trackPos.X) / trackSize.X
+                relativeX = math.clamp(relativeX, 0, 1)
+                
+                local value = min + (relativeX * (max - min))
+                updateSlider(value)
+            end
+        end)
+        
+        Slider.Destroying:Connect(function()
+            if connection then
+                connection:Disconnect()
+            end
+        end)
+        
+        fill.Parent = track
+        handle.Parent = track
+        track.Parent = Slider
+        Slider.Parent = SectionContainer
+        
+        return Slider
     end
     
-    -- Define tab methods
-    function tab:AddSection(title)
-        local section = {}
+    function section:AddToggle(name, default, callback)
+        local Toggle = Instance.new("Frame")
+        Toggle.Size = UDim2.new(1, 0, 0, 36)
+        Toggle.BackgroundTransparency = 1
+        Toggle.LayoutOrder = #SectionContainer:GetChildren() + 1
         
-        local Section = createGlassFrame(nil, UDim2.new(1, 0, 0, 40), 
-            UDim2.new(0, 0, 0, 0), 0.08)
-        Section.BackgroundColor3 = WarpHub.GlassColor
-        Section.LayoutOrder = #TabScrolling:GetChildren() + 1
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.7, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = name
+        label.TextColor3 = WarpHub.TextColor
+        label.TextSize = 13
+        label.Font = Enum.Font.GothamMedium
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = Toggle
         
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Size = UDim2.new(1, -16, 1, 0)
-        titleLabel.Position = UDim2.new(0, 10, 0, 0)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.Text = title
-        titleLabel.TextColor3 = WarpHub.TextColor
-        titleLabel.TextSize = 15
-        titleLabel.Font = Enum.Font.GothamBold
-        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        local toggleButton = Instance.new("Frame")
+        toggleButton.Size = UDim2.new(0, 40, 0, 20)
+        toggleButton.Position = UDim2.new(1, -40, 0.5, -10)
+        toggleButton.BackgroundColor3 = default and WarpHub.AccentColor or WarpHub.GlassColor
+        toggleButton.BackgroundTransparency = default and 0.06 or 0.15
+        toggleButton.BorderSizePixel = 0
         
-        titleLabel.Parent = Section
-        Section.Parent = TabScrolling
+        local toggleCorner = Instance.new("UICorner")
+        toggleCorner.CornerRadius = UDim.new(0, 10)
+        toggleCorner.Parent = toggleButton
         
-        -- Create a container for section elements
-        local SectionContainer = Instance.new("Frame")
-        SectionContainer.Size = UDim2.new(1, 0, 0, 0)
-        SectionContainer.BackgroundTransparency = 1
-        SectionContainer.LayoutOrder = #TabScrolling:GetChildren() + 1
+        local toggleStroke = Instance.new("UIStroke")
+        toggleStroke.Color = Color3.fromRGB(255, 255, 255)
+        toggleStroke.Transparency = 0.9
+        toggleStroke.Thickness = 1.2
+        toggleStroke.Parent = toggleButton
         
-        local SectionList = Instance.new("UIListLayout")
-        SectionList.Padding = UDim.new(0, 6)
-        SectionList.SortOrder = Enum.SortOrder.LayoutOrder
-        SectionList.Parent = SectionContainer
+        local toggleState = default
         
-        SectionContainer.Parent = TabScrolling
-        
-        function section:AddButton(name, callback)
-            local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(1, 0, 0, 36)
-            Button.BackgroundColor3 = WarpHub.GlassColor
-            Button.BackgroundTransparency = 0.12
-            Button.AutoButtonColor = false
-            Button.Text = ""
-            Button.BorderSizePixel = 0
-            Button.LayoutOrder = #SectionContainer:GetChildren() + 1
+        local function updateToggle()
+            if toggleState then
+                TweenService:Create(toggleButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.06,
+                    BackgroundColor3 = WarpHub.AccentColor
+                }):Play()
+            else
+                TweenService:Create(toggleButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.15,
+                    BackgroundColor3 = WarpHub.GlassColor
+                }):Play()
+            end
             
-            -- Add glass styling
-            local buttonCorner = Instance.new("UICorner")
-            buttonCorner.CornerRadius = UDim.new(0, 14)
-            buttonCorner.Parent = Button
+            if callback then callback(toggleState) end
+        end
+        
+        toggleButton.MouseButton1Click:Connect(function()
+            if windowInstance.isClosing then return end
+            toggleState = not toggleState
+            updateToggle()
+        end)
+        
+        toggleButton.MouseEnter:Connect(function()
+            if windowInstance.isClosing then return end
+            TweenService:Create(toggleButton, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 42, 0, 22)
+            }):Play()
+        end)
+        
+        toggleButton.MouseLeave:Connect(function()
+            if windowInstance.isClosing then return end
+            TweenService:Create(toggleButton, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, 40, 0, 20)
+            }):Play()
+        end)
+        
+        label.Parent = Toggle
+        toggleButton.Parent = Toggle
+        Toggle.Parent = SectionContainer
+        
+        updateToggle()
+        return Toggle
+    end
+    
+    function section:AddDivider(text)
+        local divider = windowInstance:createSectionDivider(text)
+        divider.LayoutOrder = #SectionContainer:GetChildren() + 1
+        divider.Parent = SectionContainer
+        return divider
+    end
+    
+    function section:AddTextBox(name, placeholder, callback)
+        local TextBox = Instance.new("Frame")
+        TextBox.Size = UDim2.new(1, 0, 0, 36)
+        TextBox.BackgroundTransparency = 1
+        TextBox.LayoutOrder = #SectionContainer:GetChildren() + 1
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.4, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = name
+        label.TextColor3 = WarpHub.TextColor
+        label.TextSize = 13
+        label.Font = Enum.Font.GothamMedium
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = TextBox
+        
+        local inputBox = Instance.new("TextBox")
+        inputBox.Size = UDim2.new(0.55, 0, 0.7, 0)
+        inputBox.Position = UDim2.new(0.4, 0, 0.15, 0)
+        inputBox.BackgroundColor3 = WarpHub.GlassColor
+        inputBox.BackgroundTransparency = 0.2
+        inputBox.TextColor3 = WarpHub.TextColor
+        inputBox.Text = ""
+        inputBox.TextSize = 12
+        inputBox.Font = Enum.Font.GothamMedium
+        inputBox.PlaceholderText = placeholder or "Enter text..."
+        inputBox.PlaceholderColor3 = WarpHub.SubTextColor
+        
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 6)
+        inputCorner.Parent = inputBox
+        
+        inputBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed and callback then
+                callback(inputBox.Text)
+            end
+        end)
+        
+        inputBox.Parent = TextBox
+        TextBox.Parent = SectionContainer
+        return TextBox
+    end
+    
+    function section:AddDropdown(name, options, default, callback)
+        local Dropdown = Instance.new("Frame")
+        Dropdown.Size = UDim2.new(1, 0, 0, 36)
+        Dropdown.BackgroundTransparency = 1
+        Dropdown.LayoutOrder = #SectionContainer:GetChildren() + 1
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0.4, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = name
+        label.TextColor3 = WarpHub.TextColor
+        label.TextSize = 13
+        label.Font = Enum.Font.GothamMedium
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = Dropdown
+        
+        local dropdownButton = Instance.new("TextButton")
+        dropdownButton.Size = UDim2.new(0.55, 0, 0.7, 0)
+        dropdownButton.Position = UDim2.new(0.4, 0, 0.15, 0)
+        dropdownButton.BackgroundColor3 = WarpHub.GlassColor
+        dropdownButton.BackgroundTransparency = 0.2
+        dropdownButton.TextColor3 = WarpHub.TextColor
+        dropdownButton.Text = default or "Select..."
+        dropdownButton.TextSize = 12
+        dropdownButton.Font = Enum.Font.GothamMedium
+        dropdownButton.AutoButtonColor = false
+        
+        local dropdownCorner = Instance.new("UICorner")
+        dropdownCorner.CornerRadius = UDim.new(0, 6)
+        dropdownCorner.Parent = dropdownButton
+        
+        local dropdownStroke = Instance.new("UIStroke")
+        dropdownStroke.Color = Color3.fromRGB(255, 255, 255)
+        dropdownStroke.Transparency = 0.7
+        dropdownStroke.Thickness = 1
+        dropdownStroke.Parent = dropdownButton
+        
+        local dropdownOpen = false
+        local selectedOption = default
+        
+        local dropdownFrame = Instance.new("Frame")
+        dropdownFrame.Size = UDim2.new(0.55, 0, 0, 120)
+        dropdownFrame.Position = UDim2.new(0.4, 0, 1.1, 0)
+        dropdownFrame.BackgroundColor3 = WarpHub.GlassColor
+        dropdownFrame.BackgroundTransparency = 0.1
+        dropdownFrame.BorderSizePixel = 0
+        dropdownFrame.Visible = false
+        dropdownFrame.ZIndex = 10
+        
+        local dropdownCorner2 = Instance.new("UICorner")
+        dropdownCorner2.CornerRadius = UDim.new(0, 6)
+        dropdownCorner2.Parent = dropdownFrame
+        
+        local dropdownStroke2 = Instance.new("UIStroke")
+        dropdownStroke2.Color = Color3.fromRGB(255, 255, 255)
+        dropdownStroke2.Transparency = 0.9
+        dropdownStroke2.Thickness = 1.2
+        dropdownStroke2.Parent = dropdownFrame
+        
+        local dropdownScrolling = Instance.new("ScrollingFrame")
+        dropdownScrolling.Size = UDim2.new(1, -8, 1, -8)
+        dropdownScrolling.Position = UDim2.new(0, 4, 0, 4)
+        dropdownScrolling.BackgroundTransparency = 1
+        dropdownScrolling.ScrollBarThickness = 2
+        dropdownScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
+        dropdownScrolling.CanvasSize = UDim2.new(0, 0, 0, #options * 30)
+        
+        local dropdownList = Instance.new("UIListLayout")
+        dropdownList.Padding = UDim.new(0, 2)
+        dropdownList.SortOrder = Enum.SortOrder.LayoutOrder
+        dropdownList.Parent = dropdownScrolling
+        
+        for i, option in ipairs(options) do
+            local optionButton = Instance.new("TextButton")
+            optionButton.Size = UDim2.new(1, 0, 0, 28)
+            optionButton.BackgroundColor3 = WarpHub.GlassColor
+            optionButton.BackgroundTransparency = 0.3
+            optionButton.TextColor3 = WarpHub.TextColor
+            optionButton.Text = option
+            optionButton.TextSize = 11
+            optionButton.Font = Enum.Font.GothamMedium
+            optionButton.AutoButtonColor = false
+            optionButton.LayoutOrder = i
             
-            local buttonStroke = Instance.new("UIStroke")
-            buttonStroke.Color = Color3.fromRGB(255, 255, 255)
-            buttonStroke.Transparency = 0.9
-            buttonStroke.Thickness = 1.2
-            buttonStroke.Parent = Button
-            
-            local buttonText = Instance.new("TextLabel")
-            buttonText.Size = UDim2.new(1, -16, 1, 0)
-            buttonText.Position = UDim2.new(0, 10, 0, 0)
-            buttonText.BackgroundTransparency = 1
-            buttonText.Text = name
-            buttonText.TextColor3 = WarpHub.TextColor
-            buttonText.TextSize = 13
-            buttonText.Font = Enum.Font.GothamMedium
-            buttonText.TextXAlignment = Enum.TextXAlignment.Left
-            buttonText.Parent = Button
-            
-            Button.MouseButton1Click:Connect(function()
-                if callback then callback() end
+            optionButton.MouseButton1Click:Connect(function()
+                selectedOption = option
+                dropdownButton.Text = option
+                dropdownFrame.Visible = false
+                dropdownOpen = false
+                
+                if callback then
+                    callback(option)
+                end
             end)
             
-            Button.MouseEnter:Connect(function()
-                if windowInstance.isClosing then return end
-                TweenService:Create(Button, TweenInfo.new(0.15), {
-                    BackgroundTransparency = 0.05,
+            optionButton.MouseEnter:Connect(function()
+                TweenService:Create(optionButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.1,
                     BackgroundColor3 = WarpHub.AccentColor
                 }):Play()
             end)
             
-            Button.MouseLeave:Connect(function()
-                if windowInstance.isClosing then return end
-                TweenService:Create(Button, TweenInfo.new(0.15), {
-                    BackgroundTransparency = 0.12,
+            optionButton.MouseLeave:Connect(function()
+                TweenService:Create(optionButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.3,
                     BackgroundColor3 = WarpHub.GlassColor
                 }):Play()
             end)
             
-            Button.Parent = SectionContainer
-            return Button
+            optionButton.Parent = dropdownScrolling
         end
         
-        function section:AddSlider(name, min, max, default, callback)
-            local Slider = Instance.new("Frame")
-            Slider.Size = UDim2.new(1, 0, 0, 52)
-            Slider.BackgroundTransparency = 1
-            Slider.LayoutOrder = #SectionContainer:GetChildren() + 1
-            
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -50, 0, 20)
-            label.Position = UDim2.new(0, 0, 0, 0)
-            label.BackgroundTransparency = 1
-            label.Text = name
-            label.TextColor3 = WarpHub.TextColor
-            label.TextSize = 13
-            label.Font = Enum.Font.GothamMedium
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.Parent = Slider
-            
-            local valueLabel = Instance.new("TextLabel")
-            valueLabel.Size = UDim2.new(0, 45, 0, 20)
-            valueLabel.Position = UDim2.new(1, -45, 0, 0)
-            valueLabel.BackgroundTransparency = 1
-            valueLabel.Text = tostring(default)
-            valueLabel.TextColor3 = WarpHub.AccentColor
-            valueLabel.TextSize = 13
-            valueLabel.Font = Enum.Font.GothamBold
-            valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-            valueLabel.Parent = Slider
-            
-            local track = createGlassFrame(Slider, UDim2.new(1, 0, 0, 6), 
-                UDim2.new(0, 0, 0, 30), 0.15)
-            track.BackgroundColor3 = WarpHub.GlassColor
-            
-            local fill = Instance.new("Frame")
-            fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-            fill.BackgroundColor3 = WarpHub.AccentColor
-            fill.BackgroundTransparency = 0.1
-            fill.BorderSizePixel = 0
-            
-            local fillCorner = Instance.new("UICorner")
-            fillCorner.CornerRadius = UDim.new(0, 3)
-            fillCorner.Parent = fill
-            
-            local handle = Instance.new("Frame")
-            handle.Size = UDim2.new(0, 16, 0, 16)
-            handle.Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8)
-            handle.BackgroundColor3 = WarpHub.AccentColor
-            handle.BackgroundTransparency = 0.06
-            handle.BorderSizePixel = 0
-            
-            local handleCorner = Instance.new("UICorner")
-            handleCorner.CornerRadius = UDim.new(0, 8)
-            handleCorner.Parent = handle
-            
-            local handleStroke = Instance.new("UIStroke")
-            handleStroke.Color = Color3.fromRGB(255, 255, 255)
-            handleStroke.Transparency = 0.9
-            handleStroke.Thickness = 1.2
-            handleStroke.Parent = handle
-            
-            local sliding = false
-            local currentValue = default
-            
-            local function updateSlider(value)
-                local percent = (value - min) / (max - min)
-                percent = math.clamp(percent, 0, 1)
-                
-                fill.Size = UDim2.new(percent, 0, 1, 0)
-                valueLabel.Text = tostring(math.floor(value))
-                currentValue = math.floor(value)
-                
-                TweenService:Create(handle, TweenInfo.new(0.1), {
-                    Position = UDim2.new(percent, -8, 0.5, -8)
-                }):Play()
-                
-                if callback then callback(currentValue) end
-            end
-            
-            handle.MouseButton1Down:Connect(function()
-                if windowInstance.isClosing then return end
-                sliding = true
-                TweenService:Create(handle, TweenInfo.new(0.1), {
-                    Size = UDim2.new(0, 18, 0, 18)
-                }):Play()
-            end)
-            
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    sliding = false
-                    TweenService:Create(handle, TweenInfo.new(0.15), {
-                        Size = UDim2.new(0, 16, 0, 16)
-                    }):Play()
-                end
-            end)
-            
-            local connection
-            connection = RunService.RenderStepped:Connect(function()
-                if sliding then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local trackPos = track.AbsolutePosition
-                    local trackSize = track.AbsoluteSize
-                    
-                    local relativeX = (mousePos.X - trackPos.X) / trackSize.X
-                    relativeX = math.clamp(relativeX, 0, 1)
-                    
-                    local value = min + (relativeX * (max - min))
-                    updateSlider(value)
-                end
-            end)
-            
-            Slider.Destroying:Connect(function()
-                if connection then
-                    connection:Disconnect()
-                end
-            end)
-            
-            fill.Parent = track
-            handle.Parent = track
-            track.Parent = Slider
-            Slider.Parent = SectionContainer
-            
-            return Slider
+        dropdownScrolling.Parent = dropdownFrame
+        dropdownFrame.Parent = Dropdown
+        
+        local function toggleDropdown()
+            dropdownOpen = not dropdownOpen
+            dropdownFrame.Visible = dropdownOpen
         end
         
-        function section:AddToggle(name, default, callback)
-            local Toggle = Instance.new("Frame")
-            Toggle.Size = UDim2.new(1, 0, 0, 36)
-            Toggle.BackgroundTransparency = 1
-            Toggle.LayoutOrder = #SectionContainer:GetChildren() + 1
-            
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0.7, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = name
-            label.TextColor3 = WarpHub.TextColor
-            label.TextSize = 13
-            label.Font = Enum.Font.GothamMedium
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.Parent = Toggle
-            
-            local toggleButton = Instance.new("Frame")
-            toggleButton.Size = UDim2.new(0, 40, 0, 20)
-            toggleButton.Position = UDim2.new(1, -40, 0.5, -10)
-            toggleButton.BackgroundColor3 = default and WarpHub.AccentColor or WarpHub.GlassColor
-            toggleButton.BackgroundTransparency = default and 0.06 or 0.15
-            toggleButton.BorderSizePixel = 0
-            
-            local toggleCorner = Instance.new("UICorner")
-            toggleCorner.CornerRadius = UDim.new(0, 10)
-            toggleCorner.Parent = toggleButton
-            
-            local toggleStroke = Instance.new("UIStroke")
-            toggleStroke.Color = Color3.fromRGB(255, 255, 255)
-            toggleStroke.Transparency = 0.9
-            toggleStroke.Thickness = 1.2
-            toggleStroke.Parent = toggleButton
-            
-            local toggleState = default
-            
-            local function updateToggle()
-                if toggleState then
-                    TweenService:Create(toggleButton, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 0.06,
-                        BackgroundColor3 = WarpHub.AccentColor
-                    }):Play()
-                else
-                    TweenService:Create(toggleButton, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 0.15,
-                        BackgroundColor3 = WarpHub.GlassColor
-                    }):Play()
-                end
+        dropdownButton.MouseButton1Click:Connect(toggleDropdown)
+        
+        -- Close dropdown when clicking outside
+        local function closeDropdown(input)
+            if dropdownOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local mousePos = input.Position
+                local dropdownPos = dropdownFrame.AbsolutePosition
+                local dropdownSize = dropdownFrame.AbsoluteSize
                 
-                if callback then callback(toggleState) end
-            end
-            
-            toggleButton.MouseButton1Click:Connect(function()
-                if windowInstance.isClosing then return end
-                toggleState = not toggleState
-                updateToggle()
-            end)
-            
-            toggleButton.MouseEnter:Connect(function()
-                if windowInstance.isClosing then return end
-                TweenService:Create(toggleButton, TweenInfo.new(0.1), {
-                    Size = UDim2.new(0, 42, 0, 22)
-                }):Play()
-            end)
-            
-            toggleButton.MouseLeave:Connect(function()
-                if windowInstance.isClosing then return end
-                TweenService:Create(toggleButton, TweenInfo.new(0.1), {
-                    Size = UDim2.new(0, 40, 0, 20)
-                }):Play()
-            end)
-            
-            label.Parent = Toggle
-            toggleButton.Parent = Toggle
-            Toggle.Parent = SectionContainer
-            
-            updateToggle()
-            return Toggle
-        end
-        
-        function section:AddDivider(text)
-            local divider = windowInstance:createSectionDivider(text)
-            divider.LayoutOrder = #SectionContainer:GetChildren() + 1
-            divider.Parent = SectionContainer
-            return divider
-        end
-        
-        function section:AddTextBox(name, placeholder, callback)
-            local TextBox = Instance.new("Frame")
-            TextBox.Size = UDim2.new(1, 0, 0, 36)
-            TextBox.BackgroundTransparency = 1
-            TextBox.LayoutOrder = #SectionContainer:GetChildren() + 1
-            
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0.4, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = name
-            label.TextColor3 = WarpHub.TextColor
-            label.TextSize = 13
-            label.Font = Enum.Font.GothamMedium
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.Parent = TextBox
-            
-            local inputBox = Instance.new("TextBox")
-            inputBox.Size = UDim2.new(0.55, 0, 0.7, 0)
-            inputBox.Position = UDim2.new(0.4, 0, 0.15, 0)
-            inputBox.BackgroundColor3 = WarpHub.GlassColor
-            inputBox.BackgroundTransparency = 0.2
-            inputBox.TextColor3 = WarpHub.TextColor
-            inputBox.Text = ""
-            inputBox.TextSize = 12
-            inputBox.Font = Enum.Font.GothamMedium
-            inputBox.PlaceholderText = placeholder or "Enter text..."
-            inputBox.PlaceholderColor3 = WarpHub.SubTextColor
-            
-            local inputCorner = Instance.new("UICorner")
-            inputCorner.CornerRadius = UDim.new(0, 6)
-            inputCorner.Parent = inputBox
-            
-            inputBox.FocusLost:Connect(function(enterPressed)
-                if enterPressed and callback then
-                    callback(inputBox.Text)
-                end
-            end)
-            
-            inputBox.Parent = TextBox
-            TextBox.Parent = SectionContainer
-            return TextBox
-        end
-        
-        function section:AddDropdown(name, options, default, callback)
-            local Dropdown = Instance.new("Frame")
-            Dropdown.Size = UDim2.new(1, 0, 0, 36)
-            Dropdown.BackgroundTransparency = 1
-            Dropdown.LayoutOrder = #SectionContainer:GetChildren() + 1
-            
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0.4, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = name
-            label.TextColor3 = WarpHub.TextColor
-            label.TextSize = 13
-            label.Font = Enum.Font.GothamMedium
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.Parent = Dropdown
-            
-            local dropdownButton = Instance.new("TextButton")
-            dropdownButton.Size = UDim2.new(0.55, 0, 0.7, 0)
-            dropdownButton.Position = UDim2.new(0.4, 0, 0.15, 0)
-            dropdownButton.BackgroundColor3 = WarpHub.GlassColor
-            dropdownButton.BackgroundTransparency = 0.2
-            dropdownButton.TextColor3 = WarpHub.TextColor
-            dropdownButton.Text = default or "Select..."
-            dropdownButton.TextSize = 12
-            dropdownButton.Font = Enum.Font.GothamMedium
-            dropdownButton.AutoButtonColor = false
-            
-            local dropdownCorner = Instance.new("UICorner")
-            dropdownCorner.CornerRadius = UDim.new(0, 6)
-            dropdownCorner.Parent = dropdownButton
-            
-            local dropdownStroke = Instance.new("UIStroke")
-            dropdownStroke.Color = Color3.fromRGB(255, 255, 255)
-            dropdownStroke.Transparency = 0.7
-            dropdownStroke.Thickness = 1
-            dropdownStroke.Parent = dropdownButton
-            
-            local dropdownOpen = false
-            local selectedOption = default
-            
-            local dropdownFrame = createGlassFrame(nil, UDim2.new(0.55, 0, 0, 120), 
-                UDim2.new(0.4, 0, 1.1, 0), 0.1)
-            dropdownFrame.BackgroundColor3 = WarpHub.GlassColor
-            dropdownFrame.Visible = false
-            dropdownFrame.ZIndex = 10
-            
-            local dropdownScrolling = Instance.new("ScrollingFrame")
-            dropdownScrolling.Size = UDim2.new(1, -8, 1, -8)
-            dropdownScrolling.Position = UDim2.new(0, 4, 0, 4)
-            dropdownScrolling.BackgroundTransparency = 1
-            dropdownScrolling.ScrollBarThickness = 2
-            dropdownScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
-            dropdownScrolling.CanvasSize = UDim2.new(0, 0, 0, #options * 30)
-            
-            local dropdownList = Instance.new("UIListLayout")
-            dropdownList.Padding = UDim.new(0, 2)
-            dropdownList.SortOrder = Enum.SortOrder.LayoutOrder
-            dropdownList.Parent = dropdownScrolling
-            
-            for i, option in ipairs(options) do
-                local optionButton = Instance.new("TextButton")
-                optionButton.Size = UDim2.new(1, 0, 0, 28)
-                optionButton.BackgroundColor3 = WarpHub.GlassColor
-                optionButton.BackgroundTransparency = 0.3
-                optionButton.TextColor3 = WarpHub.TextColor
-                optionButton.Text = option
-                optionButton.TextSize = 11
-                optionButton.Font = Enum.Font.GothamMedium
-                optionButton.AutoButtonColor = false
-                optionButton.LayoutOrder = i
-                
-                optionButton.MouseButton1Click:Connect(function()
-                    selectedOption = option
-                    dropdownButton.Text = option
-                    dropdownFrame.Visible = false
+                if not (mousePos.X >= dropdownPos.X and mousePos.X <= dropdownPos.X + dropdownSize.X and
+                       mousePos.Y >= dropdownPos.Y and mousePos.Y <= dropdownPos.Y + dropdownSize.Y) then
                     dropdownOpen = false
-                    
-                    if callback then
-                        callback(option)
-                    end
-                end)
-                
-                optionButton.MouseEnter:Connect(function()
-                    TweenService:Create(optionButton, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 0.1,
-                        BackgroundColor3 = WarpHub.AccentColor
-                    }):Play()
-                end)
-                
-                optionButton.MouseLeave:Connect(function()
-                    TweenService:Create(optionButton, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 0.3,
-                        BackgroundColor3 = WarpHub.GlassColor
-                    }):Play()
-                end)
-                
-                optionButton.Parent = dropdownScrolling
-            end
-            
-            dropdownScrolling.Parent = dropdownFrame
-            dropdownFrame.Parent = Dropdown
-            
-            local function toggleDropdown()
-                dropdownOpen = not dropdownOpen
-                dropdownFrame.Visible = dropdownOpen
-            end
-            
-            dropdownButton.MouseButton1Click:Connect(toggleDropdown)
-            
-            -- Close dropdown when clicking outside
-            local function closeDropdown(input)
-                if dropdownOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local mousePos = input.Position
-                    local dropdownPos = dropdownFrame.AbsolutePosition
-                    local dropdownSize = dropdownFrame.AbsoluteSize
-                    
-                    if not (mousePos.X >= dropdownPos.X and mousePos.X <= dropdownPos.X + dropdownSize.X and
-                           mousePos.Y >= dropdownPos.Y and mousePos.Y <= dropdownPos.Y + dropdownSize.Y) then
-                        dropdownOpen = false
-                        dropdownFrame.Visible = false
-                    end
+                    dropdownFrame.Visible = false
                 end
             end
-            
-            UserInputService.InputBegan:Connect(closeDropdown)
-            
-            dropdownButton.Parent = Dropdown
-            Dropdown.Parent = SectionContainer
-            
-            return Dropdown
         end
         
-        return section
+        UserInputService.InputBegan:Connect(closeDropdown)
+        
+        dropdownButton.Parent = Dropdown
+        Dropdown.Parent = SectionContainer
+        
+        return Dropdown
     end
     
-    return tab
+    return section
 end
 
 function WarpHub:Destroy()
