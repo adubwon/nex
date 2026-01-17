@@ -916,7 +916,8 @@ function WarpHub:AddTab(name, icon)
     end
     
     function tabObj:AddDivider(text)
-        local divider = self:createSectionDivider(text or "")
+        -- Call the WarpHub method instead of trying to call it on self
+        local divider = WarpHub:createSectionDivider(text or "")
         divider.LayoutOrder = #TabScrolling:GetChildren() + 1
         divider.Parent = TabScrolling
         table.insert(tabObj.elements, divider)
@@ -928,9 +929,12 @@ function WarpHub:AddTab(name, icon)
             name = name,
             elements = {}
         }
-        
-        -- Add section title as a divider
-        local sectionTitle = tabObj:AddDivider(name)
+    
+        -- Add section title as a divider using the correct method
+        local sectionTitle = WarpHub:createSectionDivider(name)
+        sectionTitle.LayoutOrder = #TabScrolling:GetChildren() + 1
+        sectionTitle.Parent = TabScrolling
+        table.insert(tabObj.elements, sectionTitle)
         table.insert(tabObj.sections, section)
         return section
     end
