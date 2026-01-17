@@ -443,10 +443,26 @@ function WarpHub:AddTab(name)
     local tabCount = #self.SidebarTabs:GetChildren()
     local buttonPosition = UDim2.new(0, 5, 0, 5 + (tabCount * (buttonHeight + 6)))
     
-    local TabButton = createGlassFrame(nil, UDim2.new(1, -10, 0, buttonHeight), 
-        buttonPosition, 0.15)
+    -- Use TextButton instead of Frame for tab buttons
+    local TabButton = Instance.new("TextButton")
+    TabButton.Size = UDim2.new(1, -10, 0, buttonHeight)
+    TabButton.Position = buttonPosition
     TabButton.BackgroundColor3 = WarpHub.GlassColor
+    TabButton.BackgroundTransparency = 0.15
     TabButton.AutoButtonColor = false
+    TabButton.Text = ""
+    TabButton.BorderSizePixel = 0
+    
+    -- Add glass effect styling
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 14)
+    corner.Parent = TabButton
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Transparency = 0.9
+    stroke.Thickness = 1.2
+    stroke.Parent = TabButton
     
     local buttonText = Instance.new("TextLabel")
     buttonText.Size = UDim2.new(1, -16, 1, 0)
@@ -571,7 +587,8 @@ function WarpHub:AddTab(name)
         
         -- Create a container for section elements
         local SectionContainer = Instance.new("Frame")
-        SectionContainer.Size = UDim2.new(1, 0, 0, 0)
+        SectionContainer.Size = UDim2.new(1, -12, 0, 0)
+        SectionContainer.Position = UDim2.new(0, 6, 0, 0)
         SectionContainer.BackgroundTransparency = 1
         SectionContainer.LayoutOrder = #TabContent:GetChildren() + 1
         
@@ -583,11 +600,27 @@ function WarpHub:AddTab(name)
         SectionContainer.Parent = TabContent
         
         function section:AddButton(name, callback)
-            local Button = createGlassFrame(nil, UDim2.new(1, -12, 0, 36), 
-                UDim2.new(0, 0, 0, 0), 0.12)
+            -- Use TextButton for buttons too
+            local Button = Instance.new("TextButton")
+            Button.Size = UDim2.new(1, 0, 0, 36)
+            Button.Position = UDim2.new(0, 0, 0, 0)
             Button.BackgroundColor3 = WarpHub.GlassColor
+            Button.BackgroundTransparency = 0.12
             Button.AutoButtonColor = false
-            Button.LayoutOrder = #SectionContainer:GetChildren()
+            Button.Text = ""
+            Button.BorderSizePixel = 0
+            Button.LayoutOrder = #SectionContainer:GetChildren() + 1
+            
+            -- Add glass styling
+            local buttonCorner = Instance.new("UICorner")
+            buttonCorner.CornerRadius = UDim.new(0, 14)
+            buttonCorner.Parent = Button
+            
+            local buttonStroke = Instance.new("UIStroke")
+            buttonStroke.Color = Color3.fromRGB(255, 255, 255)
+            buttonStroke.Transparency = 0.9
+            buttonStroke.Thickness = 1.2
+            buttonStroke.Parent = Button
             
             local buttonText = Instance.new("TextLabel")
             buttonText.Size = UDim2.new(1, -16, 1, 0)
@@ -627,10 +660,10 @@ function WarpHub:AddTab(name)
         
         function section:AddSlider(name, min, max, default, callback)
             local Slider = Instance.new("Frame")
-            Slider.Size = UDim2.new(1, -12, 0, 52)
+            Slider.Size = UDim2.new(1, 0, 0, 52)
             Slider.Position = UDim2.new(0, 0, 0, 0)
             Slider.BackgroundTransparency = 1
-            Slider.LayoutOrder = #SectionContainer:GetChildren()
+            Slider.LayoutOrder = #SectionContainer:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -50, 0, 20)
@@ -730,10 +763,10 @@ function WarpHub:AddTab(name)
         
         function section:AddToggle(name, default, callback)
             local Toggle = Instance.new("Frame")
-            Toggle.Size = UDim2.new(1, -12, 0, 36)
+            Toggle.Size = UDim2.new(1, 0, 0, 36)
             Toggle.Position = UDim2.new(0, 0, 0, 0)
             Toggle.BackgroundTransparency = 1
-            Toggle.LayoutOrder = #SectionContainer:GetChildren()
+            Toggle.LayoutOrder = #SectionContainer:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -798,7 +831,7 @@ function WarpHub:AddTab(name)
         
         function section:AddDivider(text)
             local divider = windowInstance:createSectionDivider(text)
-            divider.LayoutOrder = #SectionContainer:GetChildren()
+            divider.LayoutOrder = #SectionContainer:GetChildren() + 1
             divider.Parent = SectionContainer
             windowInstance:updateContentSize()
             return divider
@@ -806,10 +839,10 @@ function WarpHub:AddTab(name)
         
         function section:AddTextBox(name, placeholder, callback)
             local TextBox = Instance.new("Frame")
-            TextBox.Size = UDim2.new(1, -12, 0, 36)
+            TextBox.Size = UDim2.new(1, 0, 0, 36)
             TextBox.Position = UDim2.new(0, 0, 0, 0)
             TextBox.BackgroundTransparency = 1
-            TextBox.LayoutOrder = #SectionContainer:GetChildren()
+            TextBox.LayoutOrder = #SectionContainer:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.4, 0, 1, 0)
