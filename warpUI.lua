@@ -1,41 +1,59 @@
--- WarpHub UI Library - Fixed Version
--- Version: 2.3 - Fixed missing methods
+@@ -1,21 +1,11 @@
+-- WarpHub UI Library
+-- Version: 2.2 - FULL FIX (input, sliders, toggles, CoreGui, scrolling)
+-- Version: 2.2 - Fixed UI elements not showing
 -- Load this library with: loadstring(game:HttpGet("YOUR_RAW_URL"))()
 
 local WarpHub = {}
 WarpHub.__index = WarpHub
 
+--==============================
+-- SERVICES / GUI PARENT
+--==============================
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local GuiParent = (gethui and gethui()) or game:GetService("CoreGui")
+
+--==============================
+-- DEFAULT COLORS
+--==============================
+-- Default Colors (can be customized by users)
+WarpHub.DefaultColors = {
+    AccentColor = Color3.fromRGB(168, 128, 255),
+    SecondaryColor = Color3.fromRGB(128, 96, 255),
+@@ -25,293 +15,1023 @@ WarpHub.DefaultColors = {
+    SubTextColor = Color3.fromRGB(220, 220, 240)
+}
+
+-- Configuration settings
+WarpHub.Config = {
+    Version = "2.2",
+    SplashScreenEnabled = true,
+    GlassTransparency = 0.12,
+    DarkGlassTransparency = 0.08,
+    CornerRadius = 14
+    CornerRadius = 14,
+    AnimationSpeed = 0.25
+}
+
+--==============================
+-- HELPERS
+--==============================
+local function createGlassFrame(parent, size, position, transparency, color)
 -- Services
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 
--- Default Colors
-WarpHub.DefaultColors = {
-    AccentColor = Color3.fromRGB(168, 128, 255),
-    SecondaryColor = Color3.fromRGB(128, 96, 255),
-    GlassColor = Color3.fromRGB(20, 20, 30),
-    DarkGlassColor = Color3.fromRGB(10, 10, 18),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    SubTextColor = Color3.fromRGB(220, 220, 240)
-}
-
--- Configuration
-WarpHub.Config = {
-    Version = "2.3",
-    SplashScreenEnabled = true,
-    GlassTransparency = 0.12,
-    DarkGlassTransparency = 0.08,
-    CornerRadius = 14,
-    AnimationSpeed = 0.25
-}
-
--- Helper functions
+-- Helper function to detect mobile
 local function isMobile()
     return UserInputService.TouchEnabled and not UserInputService.MouseEnabled
 end
 
+-- Initialize colors with defaults
 function WarpHub:SetColors(colors)
     for colorName, value in pairs(colors) do
         if WarpHub.DefaultColors[colorName] then
@@ -44,6 +62,7 @@ function WarpHub:SetColors(colors)
     end
 end
 
+-- Create glass frame helper
 local function createGlassFrame(parent, size, position, transparency, color, noStroke)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -52,9 +71,18 @@ local function createGlassFrame(parent, size, position, transparency, color, noS
     frame.BackgroundTransparency = transparency or WarpHub.Config.GlassTransparency
     frame.BorderSizePixel = 0
     frame.ClipsDescendants = true
+
+    local corner = Instance.new("UICorner", frame)
     
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, WarpHub.Config.CornerRadius)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.new(1,1,1)
+    stroke.Transparency = 0.9
+    stroke.Thickness = 1.2
+
+    if parent then frame.Parent = parent end
     corner.Parent = frame
     
     if not noStroke then
@@ -72,10 +100,131 @@ local function createGlassFrame(parent, size, position, transparency, color, noS
     return frame
 end
 
--- MAIN CREATE WINDOW FUNCTION
+--==============================
+-- WINDOW
+--==============================
+function WarpHub:CreateWindow(title)
+    local self = setmetatable({}, WarpHub)
+
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "WarpHubUI"
+    self.ScreenGui.ResetOnSpawn = false
+    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    self.ScreenGui.Parent = GuiParent
+
+    self.MainFrame = createGlassFrame(
+        self.ScreenGui,
+        UDim2.new(0, 620, 0, 500),
+        UDim2.new(0.5, -310, 0.5, -250),
+        WarpHub.Config.DarkGlassTransparency,
+        WarpHub.DefaultColors.DarkGlassColor
+    )
+-- Show splash screen
+local function showSplashScreen()
+    if not WarpHub.Config.SplashScreenEnabled then
+        return
+    end
+    
+    local splashGui = Instance.new("ScreenGui")
+    splashGui.Name = "WarpHubSplash"
+    splashGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    splashGui.ResetOnSpawn = false
+    splashGui.DisplayOrder = 9999
+    
+    local screenDim = Instance.new("Frame")
+    screenDim.Size = UDim2.new(1, 0, 1, 0)
+    screenDim.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
+    screenDim.BackgroundTransparency = 1
+    screenDim.Parent = splashGui
+    
+    local logoContainer = Instance.new("Frame")
+    logoContainer.Size = UDim2.new(0, 320, 0, 120)
+    logoContainer.Position = UDim2.new(0.5, -160, 0.5, -60)
+    logoContainer.BackgroundTransparency = 1
+    logoContainer.Parent = splashGui
+    
+    local logoBg = createGlassFrame(logoContainer, UDim2.new(1, 0, 1, 0), UDim2.new(0, 0, 0, 0), 0.2, WarpHub.DefaultColors.AccentColor)
+    logoBg.BackgroundTransparency = 0.8
+    
+    local logo = Instance.new("TextLabel")
+    logo.Size = UDim2.new(1, 0, 1, 0)
+    logo.AnchorPoint = Vector2.new(0.5, 0.5)
+    logo.Position = UDim2.new(0.5, 0, 0.5, 0)
+    logo.BackgroundTransparency = 1
+    logo.Text = "WARP HUB"
+    logo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    logo.TextTransparency = 1
+    logo.TextSize = 38
+    logo.Font = Enum.Font.GothamBlack
+    logo.TextStrokeTransparency = 0.7
+    logo.TextStrokeColor3 = WarpHub.DefaultColors.AccentColor
+    
+    local logoGradient = Instance.new("UIGradient")
+    logoGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, WarpHub.DefaultColors.AccentColor),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, WarpHub.DefaultColors.SecondaryColor)
+    })
+    logoGradient.Parent = logo
+    
+    logo.Parent = logoContainer
+    splashGui.Parent = CoreGui
+    
+    -- Animation sequence
+    TweenService:Create(screenDim, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 0.3
+    }):Play()
+    
+    task.wait(0.4)
+    
+    logoContainer.Size = UDim2.new(0, 10, 0, 10)
+    logoContainer.Position = UDim2.new(0.5, -5, 0.5, -5)
+    logoBg.BackgroundTransparency = 1
+    
+    TweenService:Create(logoContainer, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0), {
+        Size = UDim2.new(0, 320, 0, 120),
+        Position = UDim2.new(0.5, -160, 0.5, -60)
+    }):Play()
+    
+    TweenService:Create(logoBg, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 0.8
+    }):Play()
+    
+    task.wait(0.5)
+    
+    TweenService:Create(logo, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {
+        TextTransparency = 0
+    }):Play()
+    
+    task.wait(1.5)
+    
+    TweenService:Create(logo, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {
+        TextTransparency = 1,
+        TextSize = 10
+    }):Play()
+    
+    TweenService:Create(logoBg, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1
+    }):Play()
+    
+    TweenService:Create(logoContainer, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {
+        Size = UDim2.new(0, 10, 0, 10),
+        Position = UDim2.new(0.5, -5, 0.5, -5)
+    }):Play()
+    
+    TweenService:Create(screenDim, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {
+        BackgroundTransparency = 1
+    }):Play()
+    
+    task.wait(1)
+    splashGui:Destroy()
+end
+
+-- MAIN ENTRY POINT FOR LOADSTRING USERS
 function WarpHub:CreateWindow(title, settings)
     local windowObj = setmetatable({}, WarpHub)
     
+    -- Apply custom settings if provided
     if settings then
         if settings.SplashScreenEnabled ~= nil then
             WarpHub.Config.SplashScreenEnabled = settings.SplashScreenEnabled
@@ -85,9 +234,13 @@ function WarpHub:CreateWindow(title, settings)
         end
     end
     
-    -- Create GUI
+    -- Show splash screen
+    showSplashScreen()
+    task.wait(2.5)
+    
+    -- Create main GUI
     windowObj.ScreenGui = Instance.new("ScreenGui")
-    windowObj.ScreenGui.Name = "WarpHubUI_" .. math.random(10000, 99999)
+    windowObj.ScreenGui.Name = "WarpHubUI_" .. tostring(math.random(10000, 99999))
     windowObj.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     windowObj.ScreenGui.ResetOnSpawn = false
     windowObj.ScreenGui.DisplayOrder = 10
@@ -108,6 +261,24 @@ function WarpHub:CreateWindow(title, settings)
     local topBarHeight = 46
     
     -- Top Bar
+    self.TopBar = createGlassFrame(
+        self.MainFrame,
+        UDim2.new(1, -24, 0, 46),
+        UDim2.new(0, 12, 0, 12),
+        0.1
+    )
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -16, 1, 0)
+    titleLabel.Position = UDim2.new(0, 12, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title or "WARP HUB"
+    titleLabel.TextColor3 = WarpHub.DefaultColors.TextColor
+    titleLabel.TextSize = 20
+    titleLabel.Font = Enum.Font.GothamBlack
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = self.TopBar
+
     windowObj.TopBar = createGlassFrame(windowObj.MainFrame, UDim2.new(1, -24, 0, topBarHeight), 
         UDim2.new(0, 12, 0, 12), 0.1)
     windowObj.TopBar.BackgroundColor3 = WarpHub.DefaultColors.GlassColor
@@ -158,10 +329,36 @@ function WarpHub:CreateWindow(title, settings)
     windowObj.CloseButton.ImageColor3 = WarpHub.DefaultColors.TextColor
     
     -- Sidebar
+    self.Sidebar = createGlassFrame(
+        self.MainFrame,
+        UDim2.new(0, 140, 1, -82),
+        UDim2.new(0, 12, 0, 70),
+        0.1
+    )
+
+    self.SidebarTabs = Instance.new("Frame", self.Sidebar)
+    self.SidebarTabs.Size = UDim2.new(1, -10, 1, -10)
+    self.SidebarTabs.Position = UDim2.new(0, 5, 0, 5)
+    self.SidebarTabs.BackgroundTransparency = 1
+
+    local sideList = Instance.new("UIListLayout", self.SidebarTabs)
+    sideList.Padding = UDim.new(0, 6)
+
     windowObj.Sidebar = createGlassFrame(windowObj.MainFrame, UDim2.new(0, sidebarWidth, 1, -(topBarHeight + 24)), 
         UDim2.new(0, 12, 0, topBarHeight + 18), 0.1)
     
     -- Content Area
+    self.ContentArea = createGlassFrame(
+        self.MainFrame,
+        UDim2.new(1, -176, 1, -82),
+        UDim2.new(0, 164, 0, 70),
+        0.1
+    )
+
+    self.tabs = {}
+    self.currentTab = nil
+
+    return self
     windowObj.ContentArea = createGlassFrame(windowObj.MainFrame, UDim2.new(1, -(sidebarWidth + 24), 1, -(topBarHeight + 24)), 
         UDim2.new(0, sidebarWidth + 18, 0, topBarHeight + 18), 0.1)
     
@@ -197,15 +394,62 @@ function WarpHub:CreateWindow(title, settings)
     -- Initialize window
     windowObj:setupWindow()
     
+    -- Return the window object with public methods
     return windowObj
 end
 
--- WINDOW SETUP
+--==============================
+-- TABS
+--==============================
+function WarpHub:AddTab(name)
+    local tab = {}
+
+    -- Sidebar Button
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -10, 0, 38)
+    button.BackgroundColor3 = WarpHub.DefaultColors.GlassColor
+    button.BackgroundTransparency = 0.15
+    button.AutoButtonColor = false
+    button.Text = name
+    button.Font = Enum.Font.GothamMedium
+    button.TextSize = 13
+    button.TextColor3 = WarpHub.DefaultColors.SubTextColor
+    button.Parent = self.SidebarTabs
+
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 14)
+
+    -- Content
+    local content = Instance.new("Frame", self.ContentArea)
+    content.Size = UDim2.new(1, 0, 1, 0)
+    content.BackgroundTransparency = 1
+    content.Visible = false
+
+    local scroll = Instance.new("ScrollingFrame", content)
+    scroll.Size = UDim2.new(1, -16, 1, -16)
+    scroll.Position = UDim2.new(0, 8, 0, 8)
+    scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = WarpHub.DefaultColors.AccentColor
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+
+    local list = Instance.new("UIListLayout", scroll)
+    list.Padding = UDim.new(0, 8)
+
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scroll.CanvasSize = UDim2.new(0, 0, 0, list.AbsoluteContentSize.Y + 10)
+    end)
+
+    local function select()
+        for _, t in pairs(self.tabs) do
+            t.content.Visible = false
+            t.button.TextColor3 = WarpHub.DefaultColors.SubTextColor
+-- Window setup and animations
 function WarpHub:setupWindow()
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     
     local function animateIn()
         self.MainFrame.Visible = true
+        
         self.MainFrame.Size = UDim2.new(0, 10, 0, 10)
         self.MainFrame.Position = UDim2.new(0.5, -5, 0.5, -5)
         self.MainFrame.BackgroundTransparency = 1
@@ -216,8 +460,10 @@ function WarpHub:setupWindow()
             BackgroundTransparency = WarpHub.Config.DarkGlassTransparency
         })
         tween:Play()
+        
         tween.Completed:Wait()
         
+        -- Bounce effect
         TweenService:Create(self.MainFrame, TweenInfo.new(0.2), {
             Size = UDim2.new(0, self.windowWidth + 8, 0, self.windowHeight + 8)
         }):Play()
@@ -229,7 +475,58 @@ function WarpHub:setupWindow()
         }):Play()
     end
     
-    -- Window dragging
+    local function toggleMinimize()
+        if self.isClosing then return end
+        
+        if self.isMinimized then
+            -- Restore window
+            TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, self.windowWidth, 0, self.windowHeight),
+                Position = UDim2.new(0.5, -self.windowWidth/2, 0.5, -self.windowHeight/2)
+            }):Play()
+            TweenService:Create(self.MinimizeButton, TweenInfo.new(0.15), {
+                ImageColor3 = WarpHub.DefaultColors.TextColor
+            }):Play()
+        else
+            -- Minimize window
+            TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, self.windowWidth, 0, 70),
+                Position = UDim2.new(0.5, -self.windowWidth/2, 0.5, -35)
+            }):Play()
+            TweenService:Create(self.MinimizeButton, TweenInfo.new(0.15), {
+                ImageColor3 = WarpHub.DefaultColors.AccentColor
+            }):Play()
+        end
+        content.Visible = true
+        button.TextColor3 = WarpHub.DefaultColors.TextColor
+        self.currentTab = tab
+        self.isMinimized = not self.isMinimized
+    end
+
+    button.MouseButton1Click:Connect(select)
+
+    if #self.tabs == 0 then
+        task.delay(0.1, select)
+    
+    local function closeUI()
+        if self.isClosing then return end
+        self.isClosing = true
+        
+        local fadeTween = TweenService:Create(self.MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
+            Size = UDim2.new(0, 10, 0, 10),
+            Position = UDim2.new(0.5, -5, 0.5, -5),
+            BackgroundTransparency = 1
+        })
+        fadeTween:Play()
+        
+        fadeTween.Completed:Wait()
+        
+        if self.ScreenGui and self.ScreenGui.Parent then
+            self.ScreenGui:Destroy()
+        end
+    end
+    
+    -- Window dragging functionality
     self.TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             self.dragging = true
@@ -257,38 +554,69 @@ function WarpHub:setupWindow()
     end)
     
     -- Button connections
-    self.MinimizeButton.MouseButton1Click:Connect(function()
-        if self.isClosing then return end
-        self.isMinimized = not self.isMinimized
-        if self.isMinimized then
-            TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(0, self.windowWidth, 0, 70),
-                Position = UDim2.new(0.5, -self.windowWidth/2, 0.5, -35)
-            }):Play()
-        else
-            TweenService:Create(self.MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(0, self.windowWidth, 0, self.windowHeight),
-                Position = UDim2.new(0.5, -self.windowWidth/2, 0.5, -self.windowHeight/2)
-            }):Play()
-        end
-    end)
+    self.MinimizeButton.MouseButton1Click:Connect(toggleMinimize)
+    self.CloseButton.MouseButton1Click:Connect(closeUI)
     
-    self.CloseButton.MouseButton1Click:Connect(function()
+    -- Hover effects
+    self.MinimizeButton.MouseEnter:Connect(function()
         if self.isClosing then return end
-        self.isClosing = true
-        TweenService:Create(self.MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {
-            Size = UDim2.new(0, 10, 0, 10),
-            Position = UDim2.new(0.5, -5, 0.5, -5),
-            BackgroundTransparency = 1
+        TweenService:Create(self.MinimizeButton, TweenInfo.new(0.15), {
+            ImageColor3 = WarpHub.DefaultColors.AccentColor,
+            Size = UDim2.new(0, 24, 0, 24)
         }):Play()
-        task.wait(0.4)
-        self.ScreenGui:Destroy()
     end)
     
+    self.MinimizeButton.MouseLeave:Connect(function()
+        if self.isClosing then return end
+        TweenService:Create(self.MinimizeButton, TweenInfo.new(0.15), {
+            ImageColor3 = self.isMinimized and WarpHub.DefaultColors.AccentColor or WarpHub.DefaultColors.TextColor,
+            Size = UDim2.new(0, 22, 0, 22)
+        }):Play()
+    end)
+    
+    self.CloseButton.MouseEnter:Connect(function()
+        if self.isClosing then return end
+        TweenService:Create(self.CloseButton, TweenInfo.new(0.15), {
+            ImageColor3 = Color3.fromRGB(255, 100, 100),
+            Size = UDim2.new(0, 24, 0, 24)
+        }):Play()
+    end)
+    
+    self.CloseButton.MouseLeave:Connect(function()
+        if self.isClosing then return end
+        TweenService:Create(self.CloseButton, TweenInfo.new(0.15), {
+            ImageColor3 = WarpHub.DefaultColors.TextColor,
+            Size = UDim2.new(0, 22, 0, 22)
+        }):Play()
+    end)
+    
+    -- Start animation
     animateIn()
 end
 
--- SECTION DIVIDER
+    tab.button = button
+    tab.content = content
+    tab.scroll = scroll
+
+    table.insert(self.tabs, tab)
+
+    --==============================
+    -- ELEMENTS
+    --==============================
+    function tab:AddButton(text, callback)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 36)
+        btn.Text = text
+        btn.Font = Enum.Font.GothamMedium
+        btn.TextSize = 13
+        btn.TextColor3 = WarpHub.DefaultColors.TextColor
+        btn.BackgroundColor3 = WarpHub.DefaultColors.GlassColor
+        btn.BackgroundTransparency = 0.12
+        btn.AutoButtonColor = false
+        btn.Parent = scroll
+
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 14)
+-- Section Divider
 function WarpHub:createSectionDivider(text)
     local divider = Instance.new("Frame")
     divider.Size = UDim2.new(1, 0, 0, 26)
@@ -321,15 +649,17 @@ function WarpHub:createSectionDivider(text)
     return divider
 end
 
--- ADD TAB - FIXED WITH ALL METHODS
+        btn.MouseButton1Click:Connect(function()
+            if callback then pcall(callback) end
+        end)
+-- Add Tab - FIXED FOR LOADSTRING USAGE
 function WarpHub:AddTab(name, icon)
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     
     local tabObj = {
         name = name,
         elements = {},
-        sections = {},
-        scrolling = nil  -- Will be set below
+        sections = {}
     }
     
     local buttonHeight = 38
@@ -345,6 +675,7 @@ function WarpHub:AddTab(name, icon)
     TabButton.BorderSizePixel = 0
     TabButton.LayoutOrder = #self.SidebarTabs:GetChildren()
     
+    -- Glass styling
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 14)
     corner.Parent = TabButton
@@ -355,6 +686,7 @@ function WarpHub:AddTab(name, icon)
     stroke.Thickness = 1.2
     stroke.Parent = TabButton
     
+    -- Button text
     local buttonText = Instance.new("TextLabel")
     buttonText.Size = icon and UDim2.new(1, -36, 1, 0) or UDim2.new(1, -16, 1, 0)
     buttonText.Position = UDim2.new(0, icon and 32 or 10, 0, 0)
@@ -366,6 +698,7 @@ function WarpHub:AddTab(name, icon)
     buttonText.TextXAlignment = Enum.TextXAlignment.Left
     buttonText.Parent = TabButton
     
+    -- Optional icon
     if icon then
         local iconLabel = Instance.new("TextLabel")
         iconLabel.Size = UDim2.new(0, 20, 0, 20)
@@ -377,6 +710,25 @@ function WarpHub:AddTab(name, icon)
         iconLabel.Font = Enum.Font.GothamMedium
         iconLabel.Parent = TabButton
     end
+
+    function tab:AddToggle(text, default, callback)
+        local state = default or false
+
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 36)
+        btn.Text = text
+        btn.Font = Enum.Font.GothamMedium
+        btn.TextSize = 13
+        btn.TextColor3 = WarpHub.DefaultColors.TextColor
+        btn.AutoButtonColor = false
+        btn.Parent = scroll
+
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 14)
+
+        local function refresh()
+            btn.BackgroundColor3 = state and WarpHub.DefaultColors.AccentColor or WarpHub.DefaultColors.GlassColor
+            btn.BackgroundTransparency = state and 0.06 or 0.15
+            if callback then pcall(callback, state) end
     
     -- Tab Content
     local TabContent = Instance.new("Frame")
@@ -402,9 +754,6 @@ function WarpHub:AddTab(name, icon)
     
     TabScrolling.Parent = TabContent
     
-    -- Store in tab object
-    tabObj.scrolling = TabScrolling
-    
     -- Store tab data
     local tabData = {
         button = TabButton, 
@@ -417,7 +766,7 @@ function WarpHub:AddTab(name, icon)
     }
     table.insert(self.tabs, tabData)
     
-    -- Select tab function
+    -- Function to select this tab
     local function selectTab()
         for _, tData in pairs(self.tabs) do
             tData.content.Visible = false
@@ -429,7 +778,12 @@ function WarpHub:AddTab(name, icon)
                 TextColor3 = WarpHub.DefaultColors.SubTextColor
             }):Play()
         end
+
+        btn.MouseButton1Click:Connect(function()
+            state = not state
+            refresh()
         
+        -- Show this tab's content
         TabContent.Visible = true
         TweenService:Create(TabButton, TweenInfo.new(0.25), {
             BackgroundTransparency = 0.06,
@@ -442,7 +796,7 @@ function WarpHub:AddTab(name, icon)
         self.currentTab = tabData
     end
     
-    -- Button interactions
+    -- Button hover effects
     TabButton.MouseEnter:Connect(function()
         if self.isClosing then return end
         if not TabContent.Visible then
@@ -475,11 +829,11 @@ function WarpHub:AddTab(name, icon)
         selectTab()
     end
     
-    -- Add to parent
+    -- Add elements to parent
     TabButton.Parent = self.SidebarTabs
     TabContent.Parent = self.ContentArea
     
-    -- TAB METHODS
+    -- Tab methods
     function tabObj:AddButton(name, callback)
         local Button = Instance.new("TextButton")
         Button.Size = UDim2.new(1, 0, 0, 36)
@@ -512,9 +866,14 @@ function WarpHub:AddTab(name, icon)
         
         Button.MouseButton1Click:Connect(function()
             if callback then 
-                pcall(callback)
+                local success, err = pcall(callback)
+                if not success then
+                    warn("Button callback error:", err)
+                end
             end
         end)
+
+        refresh()
         
         Button.MouseEnter:Connect(function()
             if self.isClosing then return end
@@ -536,6 +895,16 @@ function WarpHub:AddTab(name, icon)
         table.insert(tabObj.elements, Button)
         return Button
     end
+
+    function tab:AddSlider(text, min, max, default, callback)
+        local value = math.clamp(default or min, min, max)
+
+        local holder = Instance.new("Frame", scroll)
+        holder.Size = UDim2.new(1, 0, 0, 52)
+        holder.BackgroundTransparency = 1
+
+        local label = Instance.new("TextLabel", holder)
+        label.Size = UDim2.new(1, 0, 0, 20)
     
     function tabObj:AddToggle(name, default, callback)
         local Toggle = Instance.new("Frame")
@@ -546,6 +915,7 @@ function WarpHub:AddTab(name, icon)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(0.7, 0, 1, 0)
         label.BackgroundTransparency = 1
+        label.Text = text
         label.Text = name
         label.TextColor3 = WarpHub.DefaultColors.TextColor
         label.TextSize = 13
@@ -610,7 +980,7 @@ function WarpHub:AddTab(name, icon)
         toggleButton.Parent = Toggle
         Toggle.Parent = TabScrolling
         table.insert(tabObj.elements, Toggle)
-        updateToggle()
+        updateToggle() -- Set initial state
         return Toggle
     end
     
@@ -628,6 +998,14 @@ function WarpHub:AddTab(name, icon)
         label.Text = name
         label.TextColor3 = WarpHub.DefaultColors.TextColor
         label.TextSize = 13
+
+        local bar = Instance.new("Frame", holder)
+        bar.Size = UDim2.new(1, 0, 0, 6)
+        bar.Position = UDim2.new(0, 0, 0, 34)
+        bar.BackgroundColor3 = WarpHub.DefaultColors.GlassColor
+        Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 3)
+
+        local fill = Instance.new("Frame", bar)
         label.Font = Enum.Font.GothamMedium
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.Parent = Slider
@@ -657,6 +1035,14 @@ function WarpHub:AddTab(name, icon)
         local fill = Instance.new("Frame")
         fill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
         fill.BackgroundColor3 = WarpHub.DefaultColors.AccentColor
+        fill.Size = UDim2.new((value-min)/(max-min),0,1,0)
+        Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 3)
+
+        local dragging = false
+
+        bar.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
         fill.BackgroundTransparency = 0.1
         fill.BorderSizePixel = 0
         
@@ -705,6 +1091,10 @@ function WarpHub:AddTab(name, icon)
                 Size = UDim2.new(0, 18, 0, 18)
             }):Play()
         end)
+
+        UserInputService.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
         
         UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -714,6 +1104,16 @@ function WarpHub:AddTab(name, icon)
                 }):Play()
             end
         end)
+
+        RunService.RenderStepped:Connect(function()
+            if dragging then
+                local x = math.clamp(
+                    (UserInputService:GetMouseLocation().X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X,
+                    0, 1
+                )
+                value = math.floor(min + (max - min) * x)
+                fill.Size = UDim2.new(x, 0, 1, 0)
+                if callback then pcall(callback, value) end
         
         local connection = RunService.RenderStepped:Connect(function()
             if sliding then
@@ -756,7 +1156,6 @@ function WarpHub:AddTab(name, icon)
         return Label
     end
     
-    -- ADDED: AddDivider method
     function tabObj:AddDivider(text)
         local divider = WarpHub:createSectionDivider(text or "")
         divider.LayoutOrder = #TabScrolling:GetChildren()
@@ -765,7 +1164,21 @@ function WarpHub:AddTab(name, icon)
         return divider
     end
     
-    -- ADDED: AddTextBox method
+    function tabObj:AddSection(name)
+        local section = {
+            name = name,
+            elements = {}
+        }
+    
+        -- Add section title as a divider
+        local sectionTitle = WarpHub:createSectionDivider(name)
+        sectionTitle.LayoutOrder = #TabScrolling:GetChildren()
+        sectionTitle.Parent = TabScrolling
+        table.insert(tabObj.elements, sectionTitle)
+        table.insert(tabObj.sections, section)
+        return section
+    end
+    
     function tabObj:AddTextBox(name, placeholder, callback)
         local TextBox = Instance.new("Frame")
         TextBox.Size = UDim2.new(1, 0, 0, 36)
@@ -811,25 +1224,20 @@ function WarpHub:AddTab(name, icon)
         return TextBox
     end
     
-    -- ADDED: AddSection method
-    function tabObj:AddSection(name)
-        local section = {
-            name = name,
-            elements = {}
-        }
-    
-        local sectionTitle = WarpHub:createSectionDivider(name)
-        sectionTitle.LayoutOrder = #TabScrolling:GetChildren()
-        sectionTitle.Parent = TabScrolling
-        table.insert(tabObj.elements, sectionTitle)
-        table.insert(tabObj.sections, section)
-        return section
-    end
-    
     return tabObj
 end
 
--- Window management methods
+    function tab:AddLabel(text)
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, 0, 0, 26)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = text
+        lbl.TextColor3 = WarpHub.DefaultColors.TextColor
+        lbl.Font = Enum.Font.GothamMedium
+        lbl.TextSize = 13
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = scroll
+-- Destroy window
 function WarpHub:Destroy()
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     if self.ScreenGui and self.ScreenGui.Parent then
@@ -837,6 +1245,8 @@ function WarpHub:Destroy()
     end
 end
 
+    return tab
+-- Toggle visibility
 function WarpHub:Toggle()
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     if self.ScreenGui then
@@ -844,6 +1254,7 @@ function WarpHub:Toggle()
     end
 end
 
+-- Show window
 function WarpHub:Show()
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     if self.ScreenGui then
@@ -851,6 +1262,7 @@ function WarpHub:Show()
     end
 end
 
+-- Hide window
 function WarpHub:Hide()
     local self = getmetatable(self) == WarpHub and self or getfenv(2).self
     if self.ScreenGui then
@@ -858,11 +1270,19 @@ function WarpHub:Hide()
     end
 end
 
--- Quick function
+--==============================
+-- QUICK
+--==============================
+function WarpHub.Quick(title, tabName)
+    local win = WarpHub:CreateWindow(title)
+    local tab = win:AddTab(tabName or "Main")
+    return win, tab
+-- Add a simple Quick function for easy usage
 function WarpHub.Quick(title, tabName, icon)
     local window = WarpHub:CreateWindow(title)
     local tab = window:AddTab(tabName or "Main", icon)
     return window, tab
 end
 
+-- Return the library
 return WarpHub
