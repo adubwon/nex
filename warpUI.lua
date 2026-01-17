@@ -4,7 +4,7 @@
 local WarpHub = {}
 WarpHub.__index = WarpHub
 
-WarpHub.Version = "4.0"
+WarpHub.Version = "1.0"
 WarpHub.AccentColor = Color3.fromRGB(168, 128, 255)
 WarpHub.SecondaryColor = Color3.fromRGB(128, 96, 255)
 WarpHub.GlassColor = Color3.fromRGB(20, 20, 30)
@@ -780,3 +780,4 @@ function WarpHub:Destroy()
 end
 
 -- Return the library for loadstring
+return WarpHub
