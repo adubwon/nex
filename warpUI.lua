@@ -556,23 +556,30 @@ function WarpHub:AddTab(name)
     function tab:AddSection(title)
         local section = {}
         
-        local Section = Instance.new("Frame")
-        Section.Size = UDim2.new(1, -12, 0, 40)
-        Section.Position = UDim2.new(0, 6, 0, 0)
-        Section.BackgroundColor3 = WarpHub.GlassColor
-        Section.BackgroundTransparency = 0.08
-        Section.BorderSizePixel = 0
-        Section.LayoutOrder = #TabScrolling:GetChildren() + 1
+        -- Create the main section container
+        local SectionContainer = Instance.new("Frame")
+        SectionContainer.Size = UDim2.new(1, -12, 0, 0) -- Height will be auto-adjusted
+        SectionContainer.Position = UDim2.new(0, 6, 0, 0)
+        SectionContainer.BackgroundTransparency = 1
+        SectionContainer.LayoutOrder = #TabScrolling:GetChildren() + 1
+        
+        -- Create section header
+        local SectionHeader = Instance.new("Frame")
+        SectionHeader.Size = UDim2.new(1, 0, 0, 40)
+        SectionHeader.Position = UDim2.new(0, 0, 0, 0)
+        SectionHeader.BackgroundColor3 = WarpHub.GlassColor
+        SectionHeader.BackgroundTransparency = 0.08
+        SectionHeader.BorderSizePixel = 0
         
         local sectionCorner = Instance.new("UICorner")
         sectionCorner.CornerRadius = UDim.new(0, 14)
-        sectionCorner.Parent = Section
+        sectionCorner.Parent = SectionHeader
         
         local sectionStroke = Instance.new("UIStroke")
         sectionStroke.Color = Color3.fromRGB(255, 255, 255)
         sectionStroke.Transparency = 0.9
         sectionStroke.Thickness = 1.2
-        sectionStroke.Parent = Section
+        sectionStroke.Parent = SectionHeader
         
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Size = UDim2.new(1, -16, 1, 0)
@@ -583,22 +590,40 @@ function WarpHub:AddTab(name)
         titleLabel.TextSize = 15
         titleLabel.Font = Enum.Font.GothamBold
         titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.Parent = SectionHeader
         
-        titleLabel.Parent = Section
-        Section.Parent = TabScrolling
+        -- Create content frame inside SectionContainer
+        local SectionContent = Instance.new("Frame")
+        SectionContent.Size = UDim2.new(1, 0, 0, 0) -- Height will be auto-adjusted
+        SectionContent.Position = UDim2.new(0, 0, 0, 44) -- Below header
+        SectionContent.BackgroundTransparency = 1
         
-        -- Create a container for section elements
-        local SectionContainer = Instance.new("Frame")
-        SectionContainer.Size = UDim2.new(1, -12, 0, 0)
-        SectionContainer.Position = UDim2.new(0, 6, 0, 44)
-        SectionContainer.BackgroundTransparency = 1
-        SectionContainer.LayoutOrder = #TabScrolling:GetChildren() + 1
+        local ContentList = Instance.new("UIListLayout")
+        ContentList.Padding = UDim.new(0, 8)
+        ContentList.SortOrder = Enum.SortOrder.LayoutOrder
+        ContentList.Parent = SectionContent
         
-        local SectionList = Instance.new("UIListLayout")
-        SectionList.Padding = UDim.new(0, 8)
-        SectionList.SortOrder = Enum.SortOrder.LayoutOrder
-        SectionList.Parent = SectionContainer
+        -- Auto-size SectionContent based on its children
+        local function updateSectionHeight()
+            local totalHeight = 0
+            for _, child in ipairs(SectionContent:GetChildren()) do
+                if child:IsA("Frame") or child:IsA("TextButton") then
+                    totalHeight = totalHeight + child.Size.Y.Offset
+                end
+            end
+            
+            totalHeight = totalHeight + (ContentList.Padding.Offset * (#SectionContent:GetChildren() - 1))
+            
+            SectionContent.Size = UDim2.new(1, 0, 0, totalHeight)
+            SectionContainer.Size = UDim2.new(1, -12, 0, 44 + totalHeight) -- Header height + content height
+        end
         
+        ContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            updateSectionHeight()
+        end)
+        
+        SectionHeader.Parent = SectionContainer
+        SectionContent.Parent = SectionContainer
         SectionContainer.Parent = TabScrolling
         
         function section:AddButton(name, callback)
@@ -609,7 +634,7 @@ function WarpHub:AddTab(name)
             Button.AutoButtonColor = false
             Button.Text = ""
             Button.BorderSizePixel = 0
-            Button.LayoutOrder = #SectionContainer:GetChildren() + 1
+            Button.LayoutOrder = #SectionContent:GetChildren() + 1
             
             -- Add glass styling
             local buttonCorner = Instance.new("UICorner")
@@ -653,7 +678,8 @@ function WarpHub:AddTab(name)
                 }):Play()
             end)
             
-            Button.Parent = SectionContainer
+            Button.Parent = SectionContent
+            updateSectionHeight()
             return Button
         end
         
@@ -661,7 +687,7 @@ function WarpHub:AddTab(name)
             local Slider = Instance.new("Frame")
             Slider.Size = UDim2.new(1, 0, 0, 52)
             Slider.BackgroundTransparency = 1
-            Slider.LayoutOrder = #SectionContainer:GetChildren() + 1
+            Slider.LayoutOrder = #SectionContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, -50, 0, 20)
@@ -782,8 +808,9 @@ function WarpHub:AddTab(name)
             fill.Parent = track
             handle.Parent = track
             track.Parent = Slider
-            Slider.Parent = SectionContainer
+            Slider.Parent = SectionContent
             
+            updateSectionHeight()
             return Slider
         end
         
@@ -791,7 +818,7 @@ function WarpHub:AddTab(name)
             local Toggle = Instance.new("Frame")
             Toggle.Size = UDim2.new(1, 0, 0, 36)
             Toggle.BackgroundTransparency = 1
-            Toggle.LayoutOrder = #SectionContainer:GetChildren() + 1
+            Toggle.LayoutOrder = #SectionContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -860,16 +887,19 @@ function WarpHub:AddTab(name)
             
             label.Parent = Toggle
             toggleButton.Parent = Toggle
-            Toggle.Parent = SectionContainer
+            Toggle.Parent = SectionContent
             
             updateToggle()
+            updateSectionHeight()
             return Toggle
         end
         
         function section:AddDivider(text)
             local divider = windowInstance:createSectionDivider(text)
-            divider.LayoutOrder = #SectionContainer:GetChildren() + 1
-            divider.Parent = SectionContainer
+            divider.LayoutOrder = #SectionContent:GetChildren() + 1
+            divider.Parent = SectionContent
+            
+            updateSectionHeight()
             return divider
         end
         
@@ -877,7 +907,7 @@ function WarpHub:AddTab(name)
             local TextBox = Instance.new("Frame")
             TextBox.Size = UDim2.new(1, 0, 0, 36)
             TextBox.BackgroundTransparency = 1
-            TextBox.LayoutOrder = #SectionContainer:GetChildren() + 1
+            TextBox.LayoutOrder = #SectionContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.4, 0, 1, 0)
@@ -912,7 +942,9 @@ function WarpHub:AddTab(name)
             end)
             
             inputBox.Parent = TextBox
-            TextBox.Parent = SectionContainer
+            TextBox.Parent = SectionContent
+            
+            updateSectionHeight()
             return TextBox
         end
         
@@ -920,7 +952,7 @@ function WarpHub:AddTab(name)
             local Dropdown = Instance.new("Frame")
             Dropdown.Size = UDim2.new(1, 0, 0, 36)
             Dropdown.BackgroundTransparency = 1
-            Dropdown.LayoutOrder = #SectionContainer:GetChildren() + 1
+            Dropdown.LayoutOrder = #SectionContent:GetChildren() + 1
             
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(0.4, 0, 1, 0)
@@ -1056,8 +1088,9 @@ function WarpHub:AddTab(name)
             UserInputService.InputBegan:Connect(closeDropdown)
             
             dropdownButton.Parent = Dropdown
-            Dropdown.Parent = SectionContainer
+            Dropdown.Parent = SectionContent
             
+            updateSectionHeight()
             return Dropdown
         end
         
