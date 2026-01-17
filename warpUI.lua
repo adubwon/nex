@@ -220,21 +220,6 @@ function WarpHub:CreateWindow(title)
     self.ContentArea = createGlassFrame(self.MainFrame, UDim2.new(1, -(sidebarWidth + 24), 1, -(topBarHeight + 24)), 
         UDim2.new(0, sidebarWidth + 18, 0, topBarHeight + 18), 0.1)
     
-    self.ContentScrolling = Instance.new("ScrollingFrame")
-    self.ContentScrolling.Size = UDim2.new(1, -16, 1, -16)
-    self.ContentScrolling.Position = UDim2.new(0, 8, 0, 8)
-    self.ContentScrolling.BackgroundTransparency = 1
-    self.ContentScrolling.ScrollBarThickness = 4
-    self.ContentScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
-    self.ContentScrolling.ScrollBarImageTransparency = 0.5
-    self.ContentScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
-    self.ContentScrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    
-    local ContentList = Instance.new("UIListLayout")
-    ContentList.Padding = UDim.new(0, 8)
-    ContentList.SortOrder = Enum.SortOrder.LayoutOrder
-    ContentList.Parent = self.ContentScrolling
-    
     self.SidebarTabs = Instance.new("Frame")
     self.SidebarTabs.Size = UDim2.new(1, -10, 1, -10)
     self.SidebarTabs.Position = UDim2.new(0, 5, 0, 5)
@@ -396,17 +381,6 @@ function WarpHub:setupWindow()
     end)
 end
 
-function WarpHub:updateContentSize()
-    task.wait(0.05)
-    local ySize = 0
-    for _, child in pairs(self.ContentScrolling:GetChildren()) do
-        if child:IsA("Frame") then
-            ySize = ySize + child.AbsoluteSize.Y + 8
-        end
-    end
-    self.ContentScrolling.CanvasSize = UDim2.new(0, 0, 0, ySize + 10)
-end
-
 function WarpHub:createSectionDivider(text)
     local divider = Instance.new("Frame")
     divider.Size = UDim2.new(1, 0, 0, 26)
@@ -481,16 +455,16 @@ function WarpHub:AddTab(name)
     buttonText.TextXAlignment = Enum.TextXAlignment.Left
     buttonText.Parent = TabButton
     
-    -- Create TabContent as a Frame (not ScrollingFrame)
+    -- Create TabContent as a Frame
     local TabContent = Instance.new("Frame")
     TabContent.Size = UDim2.new(1, 0, 1, 0)
     TabContent.BackgroundTransparency = 1
     TabContent.Visible = false
-    TabContent.LayoutOrder = 1
     
     -- Create ScrollingFrame inside TabContent
     local TabScrolling = Instance.new("ScrollingFrame")
-    TabScrolling.Size = UDim2.new(1, 0, 1, 0)
+    TabScrolling.Size = UDim2.new(1, -16, 1, -16)
+    TabScrolling.Position = UDim2.new(0, 8, 0, 8)
     TabScrolling.BackgroundTransparency = 1
     TabScrolling.ScrollBarThickness = 4
     TabScrolling.ScrollBarImageColor3 = WarpHub.AccentColor
@@ -505,8 +479,9 @@ function WarpHub:AddTab(name)
     
     TabScrolling.Parent = TabContent
     
+    -- FIX: Add TabContent to ContentArea instead of ContentScrolling
     TabButton.Parent = self.SidebarTabs
-    TabContent.Parent = self.ContentScrolling
+    TabContent.Parent = self.ContentArea  -- This is the fix
     
     -- Store tab data properly
     local tabData = {
@@ -581,7 +556,7 @@ function WarpHub:AddTab(name)
     function tab:AddSection(title)
         local section = {}
         
-        local Section = createGlassFrame(nil, UDim2.new(1, -12, 0, 40), 
+        local Section = createGlassFrame(nil, UDim2.new(1, 0, 0, 40), 
             UDim2.new(0, 0, 0, 0), 0.08)
         Section.BackgroundColor3 = WarpHub.GlassColor
         Section.LayoutOrder = #TabScrolling:GetChildren() + 1
@@ -601,8 +576,7 @@ function WarpHub:AddTab(name)
         
         -- Create a container for section elements
         local SectionContainer = Instance.new("Frame")
-        SectionContainer.Size = UDim2.new(1, -12, 0, 0)
-        SectionContainer.Position = UDim2.new(0, 6, 0, 0)
+        SectionContainer.Size = UDim2.new(1, 0, 0, 0)
         SectionContainer.BackgroundTransparency = 1
         SectionContainer.LayoutOrder = #TabScrolling:GetChildren() + 1
         
@@ -711,8 +685,22 @@ function WarpHub:AddTab(name)
             fillCorner.CornerRadius = UDim.new(0, 3)
             fillCorner.Parent = fill
             
-            local handle = createGlassFrame(nil, UDim2.new(0, 16, 0, 16), 
-                UDim2.new((default - min) / (max - min), -8, 0.5, -8), 0.06, WarpHub.AccentColor)
+            local handle = Instance.new("Frame")
+            handle.Size = UDim2.new(0, 16, 0, 16)
+            handle.Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8)
+            handle.BackgroundColor3 = WarpHub.AccentColor
+            handle.BackgroundTransparency = 0.06
+            handle.BorderSizePixel = 0
+            
+            local handleCorner = Instance.new("UICorner")
+            handleCorner.CornerRadius = UDim.new(0, 8)
+            handleCorner.Parent = handle
+            
+            local handleStroke = Instance.new("UIStroke")
+            handleStroke.Color = Color3.fromRGB(255, 255, 255)
+            handleStroke.Transparency = 0.9
+            handleStroke.Thickness = 1.2
+            handleStroke.Parent = handle
             
             local sliding = false
             local currentValue = default
@@ -725,7 +713,9 @@ function WarpHub:AddTab(name)
                 valueLabel.Text = tostring(math.floor(value))
                 currentValue = math.floor(value)
                 
-                handle.Position = UDim2.new(percent, -8, 0.5, -8)
+                TweenService:Create(handle, TweenInfo.new(0.1), {
+                    Position = UDim2.new(percent, -8, 0.5, -8)
+                }):Play()
                 
                 if callback then callback(currentValue) end
             end
