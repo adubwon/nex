@@ -58,6 +58,325 @@ local function createFrame(parent, size, position, transparency, color, cornerRa
     return frame
 end
 
+-- Notification System - Fixed and improved
+function WarpHub:Notify(title, message, duration, notificationType)
+    local duration = duration or 2.5
+    local notificationType = notificationType or "info"
+    
+    -- Create notification GUI
+    local notificationGUI = Instance.new("ScreenGui")
+    notificationGUI.Name = "WarpHubNotification_" .. HttpService:GenerateGUID(false)
+    notificationGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    notificationGUI.ResetOnSpawn = false
+    
+    -- Calculate notification size based on content
+    local titleHeight = isMobile and 28 or 32
+    local messageHeight = isMobile and 40 or 44
+    local padding = isMobile and 12 or 16
+    local totalHeight = titleHeight + messageHeight + padding
+    
+    -- Determine notification width based on content length
+    local titleTextSize = TextService:GetTextSize(title or "Notification", isMobile and 16 or 18, Enum.Font.GothamBold, Vector2.new(400, 50))
+    local messageTextSize = TextService:GetTextSize(message or "", isMobile and 13 or 14, Enum.Font.GothamMedium, Vector2.new(400, 100))
+    local maxWidth = math.max(titleTextSize.X, messageTextSize.X) + 80
+    local notificationWidth = math.clamp(maxWidth, isMobile and 280 or 320, isMobile and 360 or 420)
+    
+    -- Position at top middle of screen
+    local screenWidth = workspace.CurrentCamera.ViewportSize.X
+    local xPosition = (screenWidth - notificationWidth) / 2
+    
+    local mainFrame = createFrame(nil, UDim2.new(0, notificationWidth, 0, totalHeight), 
+        UDim2.new(0, xPosition, 0, -totalHeight), 
+        0.05, WarpHub.Config.DarkGlassColor, isMobile and 10 or 14)
+    
+    -- Add border effect
+    local borderFrame = Instance.new("Frame")
+    borderFrame.Size = UDim2.new(1, 0, 1, 0)
+    borderFrame.Position = UDim2.new(0, 0, 0, 0)
+    borderFrame.BackgroundTransparency = 1
+    borderFrame.ZIndex = 2
+    
+    local borderCorner = Instance.new("UICorner")
+    borderCorner.CornerRadius = UDim.new(0, isMobile and 10 or 14)
+    borderCorner.Parent = borderFrame
+    
+    local borderStroke = Instance.new("UIStroke")
+    borderStroke.Color = WarpHub.Config.AccentColor
+    borderStroke.Thickness = 2
+    borderStroke.Transparency = 0.3
+    borderStroke.Parent = borderFrame
+    
+    -- Title label
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -padding * 2, 0, titleHeight)
+    titleLabel.Position = UDim2.new(0, padding, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title or "Notification"
+    titleLabel.TextColor3 = WarpHub.Config.AccentColor
+    titleLabel.TextSize = isMobile and 16 or 18
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    
+    -- Title gradient effect
+    local titleGlow = Instance.new("UIGradient")
+    titleGlow.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, WarpHub.Config.AccentColor),
+        ColorSequenceKeypoint.new(0.7, WarpHub.Config.SecondaryColor),
+        ColorSequenceKeypoint.new(1, WarpHub.Config.AccentColor)
+    })
+    titleGlow.Parent = titleLabel
+    
+    -- Message label
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Size = UDim2.new(1, -padding * 2, 0, messageHeight)
+    messageLabel.Position = UDim2.new(0, padding, 0, titleHeight)
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Text = message or ""
+    messageLabel.TextColor3 = WarpHub.Config.TextColor
+    messageLabel.TextSize = isMobile and 13 or 14
+    messageLabel.Font = Enum.Font.GothamMedium
+    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    messageLabel.TextYAlignment = Enum.TextYAlignment.Top
+    messageLabel.TextWrapped = true
+    messageLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    messageLabel.LineHeight = 1.2
+    
+    -- Progress bar for duration
+    local progressBarContainer = Instance.new("Frame")
+    progressBarContainer.Size = UDim2.new(1, -padding * 2, 0, 2)
+    progressBarContainer.Position = UDim2.new(0, padding, 1, -6)
+    progressBarContainer.BackgroundColor3 = WarpHub.Config.GlassColor
+    progressBarContainer.BackgroundTransparency = 0.5
+    progressBarContainer.BorderSizePixel = 0
+    
+    local progressBarCorner = Instance.new("UICorner")
+    progressBarCorner.CornerRadius = UDim.new(1, 0)
+    progressBarCorner.Parent = progressBarContainer
+    
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.Position = UDim2.new(0, 0, 0, 0)
+    progressBar.BackgroundColor3 = WarpHub.Config.AccentColor
+    progressBar.BorderSizePixel = 0
+    
+    local progressBarInnerCorner = Instance.new("UICorner")
+    progressBarInnerCorner.CornerRadius = UDim.new(1, 0)
+    progressBarInnerCorner.Parent = progressBar
+    
+    local progressGradient = Instance.new("UIGradient")
+    progressGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, WarpHub.Config.AccentColor),
+        ColorSequenceKeypoint.new(1, WarpHub.Config.SecondaryColor)
+    })
+    progressGradient.Parent = progressBar
+    
+    -- Icon for notification
+    local icon = Instance.new("ImageLabel")
+    icon.Size = UDim2.new(0, isMobile and 20 or 22, 0, isMobile and 20 or 22)
+    icon.Position = UDim2.new(1, -(padding + isMobile and 20 or 22), 0, padding / 2)
+    icon.BackgroundTransparency = 1
+    icon.AnchorPoint = Vector2.new(0.5, 0.5)
+    
+    -- Set icon based on notification type
+    local iconAsset = "rbxassetid://6031094678" -- Default info icon
+    local iconColor = WarpHub.Config.AccentColor
+    
+    if notificationType == "success" or (title and (title:lower():find("enable") or title:lower():find("on"))) then
+        iconAsset = "rbxassetid://6031094667" -- Check mark
+        iconColor = Color3.fromRGB(85, 255, 127) -- Green
+    elseif notificationType == "warning" or (title and (title:lower():find("disable") or title:lower():find("off"))) then
+        iconAsset = "rbxassetid://6031094669" -- X mark
+        iconColor = Color3.fromRGB(255, 100, 100) -- Red
+    elseif notificationType == "error" then
+        iconAsset = "rbxassetid://6031094670" -- Warning
+        iconColor = Color3.fromRGB(255, 170, 0) -- Orange
+    end
+    
+    icon.Image = iconAsset
+    icon.ImageColor3 = iconColor
+    
+    -- Assemble GUI
+    borderFrame.Parent = mainFrame
+    titleLabel.Parent = mainFrame
+    messageLabel.Parent = mainFrame
+    progressBar.Parent = progressBarContainer
+    progressBarContainer.Parent = mainFrame
+    icon.Parent = mainFrame
+    mainFrame.Parent = notificationGUI
+    notificationGUI.Parent = CoreGui
+    
+    -- Store all active notifications to manage stacking
+    if not WarpHub.ActiveNotifications then
+        WarpHub.ActiveNotifications = {}
+    end
+    
+    local notificationId = #WarpHub.ActiveNotifications + 1
+    WarpHub.ActiveNotifications[notificationId] = {
+        frame = mainFrame,
+        id = notificationId,
+        duration = duration
+    }
+    
+    -- Position notification (stack vertically from top middle)
+    local verticalOffset = 0
+    for i, notif in ipairs(WarpHub.ActiveNotifications) do
+        if notif.id ~= notificationId then
+            verticalOffset = verticalOffset + notif.frame.AbsoluteSize.Y + 8
+        end
+    end
+    
+    -- Update position for this notification
+    WarpHub.ActiveNotifications[notificationId].verticalOffset = verticalOffset
+    
+    -- Slide in animation from top
+    TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, xPosition, 0, 20 + verticalOffset)
+    }):Play()
+    
+    -- Progress bar animation
+    TweenService:Create(progressBar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(1, 0, 1, 0)
+    }):Play()
+    
+    -- Auto-remove after duration
+    local removeConnection
+    removeConnection = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        duration = duration - dt
+        if duration <= 0 then
+            removeConnection:Disconnect()
+            
+            -- Slide out animation
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0, xPosition, 0, -totalHeight)
+            }):Play()
+            
+            -- Fade out
+            TweenService:Create(mainFrame, TweenInfo.new(0.3), {
+                BackgroundTransparency = 1
+            }):Play()
+            
+            TweenService:Create(titleLabel, TweenInfo.new(0.3), {
+                TextTransparency = 1
+            }):Play()
+            
+            TweenService:Create(messageLabel, TweenInfo.new(0.3), {
+                TextTransparency = 1
+            }):Play()
+            
+            TweenService:Create(icon, TweenInfo.new(0.3), {
+                ImageTransparency = 1
+            }):Play()
+            
+            -- Remove from active notifications
+            for i, notif in ipairs(WarpHub.ActiveNotifications) do
+                if notif.id == notificationId then
+                    table.remove(WarpHub.ActiveNotifications, i)
+                    break
+                end
+            end
+            
+            -- Update positions of remaining notifications
+            for i, notif in ipairs(WarpHub.ActiveNotifications) do
+                local newY = 20 + ((i - 1) * (notif.frame.AbsoluteSize.Y + 8))
+                local screenWidth = workspace.CurrentCamera.ViewportSize.X
+                local notifWidth = notif.frame.AbsoluteSize.X
+                local notifX = (screenWidth - notifWidth) / 2
+                TweenService:Create(notif.frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                    Position = UDim2.new(0, notifX, 0, newY)
+                }):Play()
+            end
+            
+            -- Destroy after animation
+            task.wait(0.3)
+            if notificationGUI and notificationGUI.Parent then
+                notificationGUI:Destroy()
+            end
+        end
+    end)
+    
+    -- Click to dismiss
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           (isMobile and input.UserInputType == Enum.UserInputType.Touch) then
+            if removeConnection then
+                removeConnection:Disconnect()
+            end
+            
+            -- Quick fade out with upward motion
+            TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                Position = UDim2.new(0, xPosition, 0, 20 + verticalOffset - 30),
+                BackgroundTransparency = 1
+            }):Play()
+            
+            TweenService:Create(titleLabel, TweenInfo.new(0.2), {
+                TextTransparency = 1
+            }):Play()
+            
+            TweenService:Create(messageLabel, TweenInfo.new(0.2), {
+                TextTransparency = 1
+            }):Play()
+            
+            TweenService:Create(icon, TweenInfo.new(0.2), {
+                ImageTransparency = 1
+            }):Play()
+            
+            -- Remove from active notifications
+            for i, notif in ipairs(WarpHub.ActiveNotifications) do
+                if notif.id == notificationId then
+                    table.remove(WarpHub.ActiveNotifications, i)
+                    break
+                end
+            end
+            
+            -- Update positions of remaining notifications
+            for i, notif in ipairs(WarpHub.ActiveNotifications) do
+                local newY = 20 + ((i - 1) * (notif.frame.AbsoluteSize.Y + 8))
+                local screenWidth = workspace.CurrentCamera.ViewportSize.X
+                local notifWidth = notif.frame.AbsoluteSize.X
+                local notifX = (screenWidth - notifWidth) / 2
+                TweenService:Create(notif.frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                    Position = UDim2.new(0, notifX, 0, newY)
+                }):Play()
+            end
+            
+            task.wait(0.2)
+            if notificationGUI and notificationGUI.Parent then
+                notificationGUI:Destroy()
+            end
+        end
+    end)
+    
+    -- Hover effects (desktop only)
+    if not isMobile then
+        mainFrame.MouseEnter:Connect(function()
+            TweenService:Create(mainFrame, TweenInfo.new(0.15), {
+                BackgroundTransparency = 0.02
+            }):Play()
+            TweenService:Create(borderStroke, TweenInfo.new(0.15), {
+                Transparency = 0.1
+            }):Play()
+            TweenService:Create(icon, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, isMobile and 22 or 24, 0, isMobile and 22 or 24)
+            }):Play()
+        end)
+        
+        mainFrame.MouseLeave:Connect(function()
+            TweenService:Create(mainFrame, TweenInfo.new(0.15), {
+                BackgroundTransparency = 0.05
+            }):Play()
+            TweenService:Create(borderStroke, TweenInfo.new(0.15), {
+                Transparency = 0.3
+            }):Play()
+            TweenService:Create(icon, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, isMobile and 20 or 22, 0, isMobile and 20 or 22)
+            }):Play()
+        end)
+    end
+    
+    return notificationId
+end
+
 function WarpHub:CreateWindow(title)
     local self = setmetatable({}, WarpHub)
     
@@ -66,15 +385,16 @@ function WarpHub:CreateWindow(title)
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     self.ScreenGui.ResetOnSpawn = false
     
-    self.windowWidth = isMobile and 380 or 520
-    self.windowHeight = isMobile and 520 or 520
+    -- Adjust window size for mobile
+    self.windowWidth = isMobile and 340 or 520
+    self.windowHeight = isMobile and 480 or 520
     
     self.MainFrame = createFrame(nil, UDim2.new(0, self.windowWidth, 0, self.windowHeight), 
         UDim2.new(0.5, -self.windowWidth/2, 0.5, -self.windowHeight/2), 
         WarpHub.Config.DarkGlassTransparency, WarpHub.Config.DarkGlassColor, isMobile and 16 or 20)
 
-    local sidebarWidth = isMobile and 120 or 150
-    local topBarHeight = isMobile and 45 or 50
+    local sidebarWidth = isMobile and 100 or 150
+    local topBarHeight = isMobile and 40 or 50
     
     self.TopBar = createFrame(self.MainFrame, UDim2.new(1, -20, 0, topBarHeight), 
         UDim2.new(0, 10, 0, 10), 0.1, WarpHub.Config.GlassColor, isMobile and 10 or 12)
@@ -103,6 +423,7 @@ function WarpHub:CreateWindow(title)
     titleGlow.Parent = windowTitle
     windowTitle.Parent = titleContainer
     
+    -- Fixed Minimize and Close buttons (using original icons)
     self.MinimizeButton = Instance.new("ImageButton")
     self.MinimizeButton.Size = UDim2.new(0, isMobile and 20 or 24, 0, isMobile and 20 or 24)
     self.MinimizeButton.Position = UDim2.new(1, isMobile and -60 or -84, 0.5, isMobile and -10 or -12)
@@ -510,13 +831,17 @@ function WarpHub:AddTab(name)
             buttonIcon.Size = UDim2.new(0, isMobile and 20 or 24, 0, isMobile and 20 or 24)
             buttonIcon.Position = UDim2.new(1, isMobile and -28 or -32, 0.5, isMobile and -10 or -12)
             buttonIcon.BackgroundTransparency = 1
-            buttonIcon.Image = "rbxassetid://6031094678"
+            buttonIcon.Image = "rbxassetid://6031094667" -- Check mark for buttons
             buttonIcon.ImageColor3 = WarpHub.Config.AccentColor
             buttonIcon.Parent = Button
             
             Button.MouseButton1Click:Connect(function()
                 if callback then 
                     pcall(callback)
+                end
+                -- Show notification for button click
+                if WarpHub and WarpHub.Notify then
+                    WarpHub:Notify("Button Pressed", "You clicked: " .. name, 2, "success")
                 end
             end)
             
@@ -630,6 +955,13 @@ function WarpHub:AddTab(name)
             toggleButton.MouseButton1Click:Connect(function()
                 toggleState = not toggleState
                 updateToggle()
+                
+                -- Show notification when toggle changes
+                if WarpHub and WarpHub.Notify then
+                    local status = toggleState and "Enabled" or "Disabled"
+                    local notificationType = toggleState and "success" or "warning"
+                    WarpHub:Notify("Toggle Updated", name .. ": " .. status, 2, notificationType)
+                end
             end)
             
             toggleButton.MouseEnter:Connect(function()
@@ -669,6 +1001,7 @@ function WarpHub:AddTab(name)
         
         function section:AddSlider(name, minValue, maxValue, defaultValue, callback)
             local sliderValue = defaultValue or minValue
+            local isDragging = false
             
             local Slider = Instance.new("Frame")
             Slider.Size = UDim2.new(1, 0, 0, isMobile and 46 or 50)
@@ -690,8 +1023,8 @@ function WarpHub:AddTab(name)
             sliderContainer.BackgroundTransparency = 1
             
             local track = Instance.new("TextButton")
-            track.Size = UDim2.new(1, 0, 0, isMobile and 5 or 6)
-            track.Position = UDim2.new(0, 0, isMobile and 0.5 or 0.5, isMobile and -2.5 or -3)
+            track.Size = UDim2.new(1, 0, 0, isMobile and 6 or 7) -- Slightly thicker track
+            track.Position = UDim2.new(0, 0, isMobile and 0.5 or 0.5, isMobile and -3 or -3.5)
             track.BackgroundColor3 = WarpHub.Config.SliderTrack
             track.BackgroundTransparency = 0.2
             track.AutoButtonColor = false
@@ -713,9 +1046,10 @@ function WarpHub:AddTab(name)
             fillCorner.CornerRadius = UDim.new(1, 0)
             fillCorner.Parent = fill
             
+            -- Fixed slider button position (now above the track)
             local sliderButton = Instance.new("TextButton")
-            sliderButton.Size = UDim2.new(0, isMobile and 18 or 20, 0, isMobile and 18 or 20)
-            sliderButton.Position = UDim2.new(0, isMobile and -9 or -10, isMobile and 0.5 or 0.5, isMobile and -9 or -10)
+            sliderButton.Size = UDim2.new(0, isMobile and 20 or 22, 0, isMobile and 20 or 22) -- Larger button
+            sliderButton.Position = UDim2.new(0, isMobile and -10 or -11, isMobile and 0.5 or 0.5, isMobile and -10 or -11)
             sliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             sliderButton.BackgroundTransparency = 0
             sliderButton.AutoButtonColor = false
@@ -727,18 +1061,23 @@ function WarpHub:AddTab(name)
             
             local buttonStroke = Instance.new("UIStroke")
             buttonStroke.Color = WarpHub.Config.AccentColor
-            buttonStroke.Thickness = isMobile and 1.5 or 2
+            buttonStroke.Thickness = isMobile and 2 or 2.5
             buttonStroke.Transparency = 0
             buttonStroke.Parent = sliderButton
             
-            local function updateSlider(value)
+            local function updateSlider(value, showNotification)
                 local normalized = (value - minValue) / (maxValue - minValue)
                 local fillWidth = track.AbsoluteSize.X * normalized
                 
                 fill.Size = UDim2.new(normalized, 0, 1, 0)
-                sliderButton.Position = UDim2.new(normalized, isMobile and -9 or -10, isMobile and 0.5 or 0.5, isMobile and -9 or -10)
+                sliderButton.Position = UDim2.new(normalized, isMobile and -10 or -11, isMobile and 0.5 or 0.5, isMobile and -10 or -11)
                 label.Text = name .. ": " .. tostring(math.floor(value * 100) / 100)
                 sliderValue = value
+                
+                -- Only show notification when dragging ends
+                if showNotification and WarpHub and WarpHub.Notify and not isDragging then
+                    WarpHub:Notify("Slider Updated", name .. " set to: " .. tostring(math.floor(value * 100) / 100), 1.5, "info")
+                end
                 
                 if callback then
                     pcall(callback, value)
@@ -748,6 +1087,7 @@ function WarpHub:AddTab(name)
             local function onInput(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or 
                    (isMobile and input.UserInputType == Enum.UserInputType.Touch) then
+                    isDragging = true
                     local connection
                     connection = RunService.RenderStepped:Connect(function()
                         local mousePos
@@ -768,7 +1108,7 @@ function WarpHub:AddTab(name)
                             relativeX = math.clamp(relativeX, 0, 1)
                             
                             local newValue = minValue + (relativeX * (maxValue - minValue))
-                            updateSlider(newValue)
+                            updateSlider(newValue, false) -- Don't show notification during drag
                         end
                     end)
                     
@@ -777,6 +1117,12 @@ function WarpHub:AddTab(name)
                            (isMobile and endInput.UserInputType == Enum.UserInputType.Touch) then
                             if connection then
                                 connection:Disconnect()
+                            end
+                            isDragging = false
+                            
+                            -- Show notification when slider is released
+                            if WarpHub and WarpHub.Notify then
+                                WarpHub:Notify("Slider Updated", name .. " set to: " .. tostring(math.floor(sliderValue * 100) / 100), 1.5, "info")
                             end
                         end
                     end
@@ -788,7 +1134,7 @@ function WarpHub:AddTab(name)
             track.InputBegan:Connect(onInput)
             sliderButton.InputBegan:Connect(onInput)
             
-            updateSlider(sliderValue)
+            updateSlider(sliderValue, false)
             
             sliderButton.Parent = sliderContainer
             fill.Parent = track
@@ -803,7 +1149,7 @@ function WarpHub:AddTab(name)
                 instance = Slider,
                 value = sliderValue,
                 Update = function(self, newValue)
-                    updateSlider(newValue)
+                    updateSlider(newValue, true)
                 end,
                 GetValue = function(self)
                     return sliderValue
@@ -962,6 +1308,11 @@ function WarpHub:AddTab(name)
                     
                     toggleDropdown()
                     
+                    -- Show notification for dropdown selection
+                    if WarpHub and WarpHub.Notify then
+                        WarpHub:Notify("Selection Changed", name .. " set to: " .. selectedOption, 2, "info")
+                    end
+                    
                     if callback then
                         pcall(callback, selectedOption)
                     end
@@ -1006,6 +1357,11 @@ function WarpHub:AddTab(name)
                         end
                     end
                     
+                    -- Show notification when updated programmatically
+                    if WarpHub and WarpHub.Notify then
+                        WarpHub:Notify("Dropdown Updated", name .. " set to: " .. selectedOption, 2, "info")
+                    end
+                    
                     if callback then
                         pcall(callback, selectedOption)
                     end
@@ -1034,7 +1390,7 @@ function WarpHub:AddTab(name)
             label.TextXAlignment = Enum.TextXAlignment.Left
             
             local inputContainer = Instance.new("Frame")
-            inputContainer.Size = UDim2.new(0.7, -8, 0.8, 0)
+            inputContainer.Size = UDim2.new(0.7, 0, 0.8, 0)
             inputContainer.Position = UDim2.new(0.3, 0, 0.1, 0)
             inputContainer.BackgroundColor3 = WarpHub.Config.InputBackground
             inputContainer.BackgroundTransparency = 0.15
@@ -1045,7 +1401,7 @@ function WarpHub:AddTab(name)
             inputCorner.Parent = inputContainer
             
             local textBox = Instance.new("TextBox")
-            textBox.Size = UDim2.new(1, -56, 1, 0)
+            textBox.Size = UDim2.new(1, -16, 1, 0)
             textBox.Position = UDim2.new(0, 8, 0, 0)
             textBox.BackgroundTransparency = 1
             textBox.Text = ""
@@ -1061,42 +1417,18 @@ function WarpHub:AddTab(name)
                 textBox.TextScaled = true
             end
             
-            local submitButton = Instance.new("TextButton")
-            submitButton.Size = UDim2.new(0, isMobile and 20 or 24, 0, isMobile and 20 or 24)
-            submitButton.Position = UDim2.new(1, isMobile and -24 or -28, isMobile and 0.5 or 0.5, isMobile and -10 or -12)
-            submitButton.BackgroundColor3 = WarpHub.Config.AccentColor
-            submitButton.BackgroundTransparency = 0.2
-            submitButton.AutoButtonColor = false
-            submitButton.Text = ""
-            submitButton.BorderSizePixel = 0
-            
-            if isMobile then
-                submitButton.TouchTap:Connect(function()
-                    submitButton.MouseButton1Click:Fire()
-                end)
-            end
-            
-            local submitCorner = Instance.new("UICorner")
-            submitCorner.CornerRadius = UDim.new(1, 0)
-            submitCorner.Parent = submitButton
-            
-            local submitIcon = Instance.new("ImageLabel")
-            submitIcon.Size = UDim2.new(0, isMobile and 12 or 16, 0, isMobile and 12 or 16)
-            submitIcon.Position = UDim2.new(isMobile and 0.5 or 0.5, isMobile and -6 or -8, isMobile and 0.5 or 0.5, isMobile and -6 or -8)
-            submitIcon.BackgroundTransparency = 1
-            submitIcon.Image = "rbxassetid://6031094667"
-            submitIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-            submitIcon.Parent = submitButton
-            
             local function submit()
                 if textBox.Text ~= "" then
+                    -- Show notification for input submission
+                    if WarpHub and WarpHub.Notify then
+                        WarpHub:Notify("Input Submitted", name .. ": " .. textBox.Text, 2, "info")
+                    end
+                    
                     if callback then
                         pcall(callback, textBox.Text)
                     end
                 end
             end
-            
-            submitButton.MouseButton1Click:Connect(submit)
             
             textBox.FocusLost:Connect(function(enterPressed)
                 if enterPressed then
@@ -1108,21 +1440,14 @@ function WarpHub:AddTab(name)
                 TweenService:Create(inputContainer, TweenInfo.new(0.15), {
                     BackgroundTransparency = 0.1
                 }):Play()
-                TweenService:Create(submitButton, TweenInfo.new(0.15), {
-                    BackgroundTransparency = 0.1
-                }):Play()
             end)
             
             inputContainer.MouseLeave:Connect(function()
                 TweenService:Create(inputContainer, TweenInfo.new(0.15), {
                     BackgroundTransparency = 0.15
                 }):Play()
-                TweenService:Create(submitButton, TweenInfo.new(0.15), {
-                    BackgroundTransparency = 0.2
-                }):Play()
             end)
             
-            submitButton.Parent = inputContainer
             textBox.Parent = inputContainer
             label.Parent = Input
             inputContainer.Parent = Input
@@ -1138,6 +1463,10 @@ function WarpHub:AddTab(name)
                 end,
                 SetText = function(self, newText)
                     textBox.Text = newText
+                    -- Show notification when text is set programmatically
+                    if newText ~= "" and WarpHub and WarpHub.Notify then
+                        WarpHub:Notify("Input Set", name .. " updated", 1.5, "info")
+                    end
                 end,
                 Clear = function(self)
                     textBox.Text = ""
@@ -1188,111 +1517,53 @@ function WarpHub:AddTab(name)
     return tab
 end
 
-local function showNotification(title, text, duration)
-    duration = duration or 3
-    
-    local notificationFrame = Instance.new("Frame")
-    notificationFrame.Size = UDim2.new(0, isMobile and 280 or 320, 0, isMobile and 80 or 100)
-    notificationFrame.Position = UDim2.new(1, isMobile and -290 or -340, 1, isMobile and -100 or -120)
-    notificationFrame.BackgroundTransparency = 1
-    notificationFrame.ZIndex = 100
-    
-    local glassFrame = createFrame(notificationFrame, UDim2.new(1, 0, 1, 0), 
-        UDim2.new(0, 0, 0, 0), 0.1, WarpHub.Config.GlassColor, isMobile and 10 or 12)
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -16, 0, isMobile and 24 or 30)
-    titleLabel.Position = UDim2.new(0, 8, 0, 8)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.TextColor3 = WarpHub.Config.AccentColor
-    titleLabel.TextSize = isMobile and 16 or 18
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local titleGlow = Instance.new("UIGradient")
-    titleGlow.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, WarpHub.Config.AccentColor),
-        ColorSequenceKeypoint.new(1, WarpHub.Config.SecondaryColor)
-    })
-    titleGlow.Parent = titleLabel
-    
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, -16, 0, isMobile and 32 or 40)
-    textLabel.Position = UDim2.new(0, 8, 0, isMobile and 36 or 45)
-    textLabel.BackgroundTransparency = 1
-    textLabel.Text = text
-    textLabel.TextColor3 = WarpHub.Config.TextColor
-    textLabel.TextSize = isMobile and 12 or 14
-    textLabel.Font = Enum.Font.GothamMedium
-    textLabel.TextXAlignment = Enum.TextXAlignment.Left
-    textLabel.TextWrapped = true
-    
-    local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, isMobile and 20 or 24, 0, isMobile and 20 or 24)
-    icon.Position = UDim2.new(1, isMobile and -28 or -34, 0, isMobile and 10 or 13)
-    icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://6031094678"
-    icon.ImageColor3 = WarpHub.Config.AccentColor
-    icon.Parent = glassFrame
-    
-    titleLabel.Parent = glassFrame
-    textLabel.Parent = glassFrame
-    notificationFrame.Parent = CoreGui
-    
-    notificationFrame.BackgroundTransparency = 1
-    glassFrame.BackgroundTransparency = 1
-    titleLabel.TextTransparency = 1
-    textLabel.TextTransparency = 1
-    icon.ImageTransparency = 1
-    
-    TweenService:Create(notificationFrame, TweenInfo.new(0.3), {
-        BackgroundTransparency = 0
-    }):Play()
-    
-    TweenService:Create(glassFrame, TweenInfo.new(0.3), {
-        BackgroundTransparency = 0.1
-    }):Play()
-    
-    TweenService:Create(titleLabel, TweenInfo.new(0.3), {
-        TextTransparency = 0
-    }):Play()
-    
-    TweenService:Create(textLabel, TweenInfo.new(0.3), {
-        TextTransparency = 0
-    }):Play()
-    
-    TweenService:Create(icon, TweenInfo.new(0.3), {
-        ImageTransparency = 0
-    }):Play()
-    
-    task.wait(duration)
-    
-    TweenService:Create(notificationFrame, TweenInfo.new(0.5), {
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, isMobile and -290 or -340, 1, isMobile and 10 or 20)
-    }):Play()
-    
-    TweenService:Create(glassFrame, TweenInfo.new(0.5), {
-        BackgroundTransparency = 1
-    }):Play()
-    
-    TweenService:Create(titleLabel, TweenInfo.new(0.5), {
-        TextTransparency = 1
-    }):Play()
-    
-    TweenService:Create(textLabel, TweenInfo.new(0.5), {
-        TextTransparency = 1
-    }):Play()
-    
-    TweenService:Create(icon, TweenInfo.new(0.5), {
-        ImageTransparency = 1
-    }):Play()
-    
-    task.wait(0.5)
-    notificationFrame:Destroy()
+-- Global notification function for backward compatibility
+function Notify(titletxt, text, time)
+    if WarpHub and WarpHub.Notify then
+        WarpHub:Notify(titletxt, text, time)
+    else
+        -- Fallback to simple notification if WarpHub isn't initialized
+        local GUI = Instance.new("ScreenGui")
+        local Main = Instance.new("Frame", GUI)
+        local title = Instance.new("TextLabel", Main)
+        local message = Instance.new("TextLabel", Main)
+        
+        GUI.Name = "NotificationOof"
+        GUI.Parent = game.CoreGui
+        
+        Main.Name = "MainFrame"
+        Main.BackgroundColor3 = Color3.new(0.156863, 0.156863, 0.156863)
+        Main.BorderSizePixel = 0
+        Main.Position = UDim2.new(1, 5, 0, 50)
+        Main.Size = UDim2.new(0, 330, 0, 100)
+        
+        title.BackgroundColor3 = Color3.new(0, 0, 0)
+        title.BackgroundTransparency = 0.9
+        title.Size = UDim2.new(1, 0, 0, 30)
+        title.Font = Enum.Font.SourceSansSemibold
+        title.Text = titletxt
+        title.TextColor3 = Color3.fromRGB(168, 128, 255)
+        title.TextSize = 25
+        
+        message.BackgroundColor3 = Color3.new(0, 0, 0)
+        message.BackgroundTransparency = 1
+        message.Position = UDim2.new(0, 0, 0, 30)
+        message.Size = UDim2.new(1, 0, 1, -30)
+        message.Font = Enum.Font.SourceSans
+        message.Text = text
+        message.TextColor3 = Color3.fromRGB(168, 128, 255)
+        message.TextSize = 15
+        
+        wait(0.1)
+        Main:TweenPosition(UDim2.new(1, -1050, 0, 50), "Out", "Sine", 0.5)
+        wait(time)
+        Main:TweenPosition(UDim2.new(1, 5, 0, 50), "Out", "Sine", 0.5)
+        wait(10.0)
+        GUI:Destroy()
+    end
 end
 
+-- Example usage
 local Window = WarpHub:CreateWindow("Warp Hub UI")
 
 local ButtonsTab = Window:AddTab("Buttons")
@@ -1307,16 +1578,17 @@ local slidersSection = SlidersTab:AddSection("Example Slider")
 local dropdownsSection = DropdownsTab:AddSection("Example Dropdown")
 local inputsSection = InputsTab:AddSection("Example Input")
 
+-- These will now show notifications automatically
 buttonsSection:AddButton("Test Button", function()
-    showNotification("Button Clicked", "You clicked the test button!", 2)
+    print("Button clicked!")
 end)
 
 local toggle1 = togglesSection:AddToggle("Enable Feature", function(state)
-    showNotification("Toggle", "Feature: " .. tostring(state), 2)
+    print("Toggle state:", state)
 end)
 
 local slider1 = slidersSection:AddSlider("Volume", 0, 100, 50, function(value)
-    showNotification("Volume", "Volume set to: " .. tostring(value), 1)
+    print("Volume:", value)
 end)
 
 local playerNames = {}
@@ -1325,12 +1597,15 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 local dropdown1 = dropdownsSection:AddDropdown("Select Player", playerNames, playerNames[1], function(selected)
-    showNotification("Player Selected", "Selected: " .. selected, 2)
+    print("Selected player:", selected)
 end)
 
 local input1 = inputsSection:AddInput("Username", "Enter username", function(text)
-    showNotification("Username", "Set to: " .. text, 2)
+    print("Username:", text)
 end)
+
+-- Test the notification system directly
+Window:Notify("UI Loaded", "Warp Hub UI has been successfully loaded!", 3, "success")
 
 local function onPlayerAdded(player)
     table.insert(playerNames, player.Name)
