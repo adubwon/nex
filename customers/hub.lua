@@ -27,7 +27,7 @@ local Config = {
     KEY_STORAGE_FILE = "keyyyy.json",
 
     -- Main Settings
-    HubName = "Project Zoink",
+    HubName = "Snowy Hub",
     ScriptToLoad = "https://github.com/adubwon/nex/raw/refs/heads/main/hub.lua",
 
     -- UI Configuration
@@ -219,7 +219,7 @@ local windowWidth = 480
 local windowHeight = 480
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "WarpHubKeySystem"
+ScreenGui.Name = "SnowyKeySystem"
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.ResetOnSpawn = false
 
@@ -258,7 +258,7 @@ local logoContainer = createFrame(MainFrame, UDim2.new(0, 120, 0, 120),
 local logoLetter = Instance.new("TextLabel")
 logoLetter.Size = UDim2.new(1, 0, 1, 0)
 logoLetter.BackgroundTransparency = 1
-logoLetter.Text = "W"
+logoLetter.Text = "S"
 logoLetter.TextColor3 = Config.AccentColor
 logoLetter.TextSize = 64
 logoLetter.Font = Enum.Font.GothamBlack
