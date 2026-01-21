@@ -1,5 +1,5 @@
 -- WarpHub UI Library v2.0 - Clean & Bug-Free
--- No automatic popups, all errors fixed
+-- Fixed version with proper error handling
 
 -- Services
 local TweenService = game:GetService("TweenService")
@@ -76,12 +76,12 @@ end
 function WarpHub:Notify(title, message, duration, notificationType)
     if not title or not message then return nil end
     
-    local duration = duration or 3
-    local notificationType = notificationType or "info"
+    duration = duration or 3
+    notificationType = notificationType or "info"
     
     -- Create notification GUI
     local notificationGUI = Instance.new("ScreenGui")
-    notificationGUI.Name = "WarpHubNotification_" .. HttpService:GenerateGUID(false)
+    notificationGUI.Name = "WarpHubNotification_" .. HttpService:GenerateGUID(false):sub(1, 8)
     notificationGUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
     notificationGUI.ResetOnSpawn = false
     
@@ -213,23 +213,24 @@ function WarpHub:Notify(title, message, duration, notificationType)
         id = notificationId,
         duration = duration,
         gui = notificationGUI,
-        xPosition = xPosition
+        xPosition = xPosition,
+        totalHeight = totalHeight
     }
     
     table.insert(WarpHub.ActiveNotifications, notificationData)
     
     -- Calculate vertical offset
-    local verticalOffset = 0
+    local verticalOffset = 20
     for i = 1, notificationId - 1 do
         local notif = WarpHub.ActiveNotifications[i]
         if notif and notif.frame then
-            verticalOffset = verticalOffset + notif.frame.AbsoluteSize.Y + 8
+            verticalOffset = verticalOffset + notif.totalHeight + 8
         end
     end
     
     -- Slide in
     TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0, xPosition, 0, 20 + verticalOffset)
+        Position = UDim2.new(0, xPosition, 0, verticalOffset)
     }):Play()
     
     -- Progress animation
@@ -298,7 +299,7 @@ function WarpHub:Notify(title, message, duration, notificationType)
             -- Quick fade out
             TweenService:Create(mainFrame, TweenInfo.new(0.2), {
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, xPosition, 0, 20 + verticalOffset - 30)
+                Position = UDim2.new(0, xPosition, 0, verticalOffset - 30)
             }):Play()
             
             TweenService:Create(titleLabel, TweenInfo.new(0.2), {
@@ -329,7 +330,7 @@ function WarpHub:CreateWindow(title)
     local self = setmetatable({}, WarpHub)
     
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "WarpHubUI_" .. HttpService:GenerateGUID(false)
+    self.ScreenGui.Name = "WarpHubUI_" .. HttpService:GenerateGUID(false):sub(1, 8)
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     self.ScreenGui.ResetOnSpawn = false
     
@@ -341,6 +342,7 @@ function WarpHub:CreateWindow(title)
     self.MainFrame = createFrame(nil, UDim2.new(0, self.windowWidth, 0, self.windowHeight), 
         UDim2.new(0.5, -self.windowWidth/2, 0.5, -self.windowHeight/2), 
         WarpHub.Config.DarkGlassTransparency, WarpHub.Config.DarkGlassColor, isMobile and 16 or 20)
+    self.MainFrame.Parent = self.ScreenGui
 
     local sidebarWidth = isMobile and 100 or 150
     local topBarHeight = isMobile and 40 or 50
@@ -370,6 +372,7 @@ function WarpHub:CreateWindow(title)
     self.MinimizeButton.ImageRectOffset = Vector2.new(564, 284)
     self.MinimizeButton.ImageRectSize = Vector2.new(36, 36)
     self.MinimizeButton.ImageColor3 = WarpHub.Config.TextColor
+    self.MinimizeButton.AnchorPoint = Vector2.new(0, 0.5)
     self.MinimizeButton.Parent = self.TopBar
     
     -- Close button
@@ -381,6 +384,7 @@ function WarpHub:CreateWindow(title)
     self.CloseButton.ImageRectOffset = Vector2.new(284, 4)
     self.CloseButton.ImageRectSize = Vector2.new(24, 24)
     self.CloseButton.ImageColor3 = WarpHub.Config.TextColor
+    self.CloseButton.AnchorPoint = Vector2.new(0, 0.5)
     self.CloseButton.Parent = self.TopBar
     
     -- Sidebar
@@ -404,7 +408,6 @@ function WarpHub:CreateWindow(title)
     
     -- Assemble
     self.SidebarTabs.Parent = self.Sidebar
-    self.MainFrame.Parent = self.ScreenGui
     self.ScreenGui.Parent = CoreGui
     
     -- State variables
@@ -414,7 +417,7 @@ function WarpHub:CreateWindow(title)
     self.currentTab = nil
     self.dragging = false
     self.dragStart = Vector2.new(0, 0)
-    self.startPos = UDim2.new(0, 0, 0, 0)
+    self.startPos = self.MainFrame.Position
     
     -- Setup window interactions
     self:setupWindow()
@@ -475,28 +478,35 @@ function WarpHub:setupWindow()
             self.dragging = true
             self.dragStart = input.Position
             self.startPos = self.MainFrame.Position
+            
+            if isMobile then
+                input:Capture()
+            end
         end
     end
     
     self.TopBar.InputBegan:Connect(handleDragInput)
     
-    UserInputService.InputChanged:Connect(function(input)
+    local inputChangedConnection = UserInputService.InputChanged:Connect(function(input)
         if self.dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or 
            (isMobile and input.UserInputType == Enum.UserInputType.Touch)) then
             local delta = input.Position - self.dragStart
             self.MainFrame.Position = UDim2.new(
                 self.startPos.X.Scale, 
-                self.startPos.X.Offset + delta.X, 
+                math.clamp(self.startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - self.windowWidth),
                 self.startPos.Y.Scale, 
-                self.startPos.Y.Offset + delta.Y
+                math.clamp(self.startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - self.windowHeight)
             )
         end
     end)
     
-    UserInputService.InputEnded:Connect(function(input)
+    local inputEndedConnection = UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or 
            (isMobile and input.UserInputType == Enum.UserInputType.Touch) then
             self.dragging = false
+            if isMobile then
+                input:Capture()
+            end
         end
     end)
     
@@ -545,14 +555,24 @@ function WarpHub:setupWindow()
             }):Play()
         end)
     end
+    
+    -- Store connections for cleanup
+    self.connections = {
+        inputChanged = inputChangedConnection,
+        inputEnded = inputEndedConnection
+    }
 end
 
 -- Add Tab function
 function WarpHub:AddTab(name)
-    if not name then return end
+    if not name then 
+        warn("Tab name cannot be nil")
+        return nil 
+    end
     
     local tab = {}
-    setmetatable(tab, {__index = self})
+    setmetatable(tab, self)
+    tab.__index = self
     
     -- Tab button
     local TabButton = Instance.new("TextButton")
@@ -619,72 +639,98 @@ function WarpHub:AddTab(name)
     -- Tab selection function
     local function selectTab()
         for _, tData in ipairs(self.tabs) do
-            tData.content.Visible = false
-            TweenService:Create(tData.button, TweenInfo.new(0.25), {
-                BackgroundTransparency = 0.2,
-                BackgroundColor3 = WarpHub.Config.ButtonColor
-            }):Play()
-            TweenService:Create(tData.text, TweenInfo.new(0.25), {
-                TextColor3 = WarpHub.Config.SubTextColor
-            }):Play()
+            if tData.content then
+                tData.content.Visible = false
+            end
+            if tData.button then
+                TweenService:Create(tData.button, TweenInfo.new(0.25), {
+                    BackgroundTransparency = 0.2,
+                    BackgroundColor3 = WarpHub.Config.ButtonColor
+                }):Play()
+            end
+            if tData.text then
+                TweenService:Create(tData.text, TweenInfo.new(0.25), {
+                    TextColor3 = WarpHub.Config.SubTextColor
+                }):Play()
+            end
         end
         
-        TabContent.Visible = true
-        TweenService:Create(TabButton, TweenInfo.new(0.25), {
-            BackgroundTransparency = 0.1,
-            BackgroundColor3 = WarpHub.Config.AccentColor
-        }):Play()
-        TweenService:Create(buttonText, TweenInfo.new(0.25), {
-            TextColor3 = Color3.fromRGB(255, 255, 255)
-        }):Play()
+        if TabContent then
+            TabContent.Visible = true
+        end
+        if TabButton then
+            TweenService:Create(TabButton, TweenInfo.new(0.25), {
+                BackgroundTransparency = 0.1,
+                BackgroundColor3 = WarpHub.Config.AccentColor
+            }):Play()
+        end
+        if buttonText then
+            TweenService:Create(buttonText, TweenInfo.new(0.25), {
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            }):Play()
+        end
         
         self.currentTab = tabData
     end
     
     -- Button interactions
-    TabButton.MouseEnter:Connect(function()
-        if self.isClosing then return end
-        if not TabContent.Visible then
-            TweenService:Create(TabButton, TweenInfo.new(0.15), {
-                BackgroundTransparency = 0.15,
-                BackgroundColor3 = WarpHub.Config.ButtonHoverColor
-            }):Play()
-            TweenService:Create(buttonText, TweenInfo.new(0.15), {
-                TextColor3 = WarpHub.Config.TextColor
-            }):Play()
-        end
-    end)
-    
-    TabButton.MouseLeave:Connect(function()
-        if self.isClosing then return end
-        if not TabContent.Visible then
-            TweenService:Create(TabButton, TweenInfo.new(0.15), {
-                BackgroundTransparency = 0.2,
-                BackgroundColor3 = WarpHub.Config.ButtonColor
-            }):Play()
-            TweenService:Create(buttonText, TweenInfo.new(0.15), {
-                TextColor3 = WarpHub.Config.SubTextColor
-            }):Play()
-        end
-    end)
-    
-    TabButton.MouseButton1Click:Connect(selectTab)
+    if TabButton then
+        TabButton.MouseEnter:Connect(function()
+            if self.isClosing then return end
+            if not TabContent.Visible then
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.15,
+                    BackgroundColor3 = WarpHub.Config.ButtonHoverColor
+                }):Play()
+                TweenService:Create(buttonText, TweenInfo.new(0.15), {
+                    TextColor3 = WarpHub.Config.TextColor
+                }):Play()
+            end
+        end)
+        
+        TabButton.MouseLeave:Connect(function()
+            if self.isClosing then return end
+            if not TabContent.Visible then
+                TweenService:Create(TabButton, TweenInfo.new(0.15), {
+                    BackgroundTransparency = 0.2,
+                    BackgroundColor3 = WarpHub.Config.ButtonColor
+                }):Play()
+                TweenService:Create(buttonText, TweenInfo.new(0.15), {
+                    TextColor3 = WarpHub.Config.SubTextColor
+                }):Play()
+            end
+        end)
+        
+        TabButton.MouseButton1Click:Connect(selectTab)
+    end
     
     -- Parent everything
-    TabButton.Parent = self.SidebarTabs
-    TabScrolling.Parent = TabContent
-    TabContent.Parent = self.ContentArea
+    if TabButton then
+        TabButton.Parent = self.SidebarTabs
+    end
+    if TabScrolling then
+        TabScrolling.Parent = TabContent
+    end
+    if TabContent then
+        TabContent.Parent = self.ContentArea
+    end
     
     -- Select first tab automatically
     if #self.tabs == 1 then
-        task.delay(0.1, selectTab)
+        task.spawn(function()
+            task.wait(0.1)
+            selectTab()
+        end)
     end
     
     -- Return tab functions
     function tab:AddSection(title)
-        local section = {}
+        if not title then 
+            warn("Section title cannot be nil")
+            return {} 
+        end
         
-        if not title then return section end
+        local section = {}
         
         -- Section container
         local SectionContainer = Instance.new("Frame")
@@ -739,6 +785,8 @@ function WarpHub:AddTab(name)
         
         -- Button
         function section:AddButton(name, callback)
+            if not name then return nil end
+            
             local Button = Instance.new("TextButton")
             Button.Size = UDim2.new(1, 0, 0, isMobile and 36 or 40)
             Button.BackgroundColor3 = WarpHub.Config.ButtonColor
@@ -769,11 +817,11 @@ function WarpHub:AddTab(name)
             buttonText.TextXAlignment = Enum.TextXAlignment.Left
             buttonText.Parent = Button
             
-            Button.MouseButton1Click:Connect(function()
-                if callback then 
+            if callback then
+                Button.MouseButton1Click:Connect(function()
                     pcall(callback)
-                end
-            end)
+                end)
+            end
             
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.15), {
@@ -797,6 +845,8 @@ function WarpHub:AddTab(name)
         
         -- Toggle
         function section:AddToggle(name, callback)
+            if not name then return nil end
+            
             local toggleState = false
             
             local Toggle = Instance.new("Frame")
@@ -902,9 +952,9 @@ function WarpHub:AddTab(name)
             return toggleObj
         end
         
-        -- Dropdown (Fixed version)
+        -- Dropdown
         function section:AddDropdown(name, options, defaultOption, callback)
-            if not options or #options == 0 then return end
+            if not name or not options or #options == 0 then return nil end
             
             local selectedOption = defaultOption or options[1]
             local dropdownOpen = false
@@ -946,6 +996,7 @@ function WarpHub:AddTab(name)
             arrow.BackgroundTransparency = 1
             arrow.Image = "rbxassetid://6031091006"
             arrow.ImageColor3 = WarpHub.Config.AccentColor
+            arrow.AnchorPoint = Vector2.new(1, 0.5)
             arrow.Parent = dropdownButton
             
             -- Options frame
@@ -1189,6 +1240,8 @@ function WarpHub:AddTab(name)
         
         -- Label
         function section:AddLabel(text)
+            if not text then return nil end
+            
             local Label = Instance.new("Frame")
             Label.Size = UDim2.new(1, 0, 0, isMobile and 28 or 32)
             Label.BackgroundTransparency = 1
@@ -1210,6 +1263,130 @@ function WarpHub:AddTab(name)
             updateSectionHeight()
             
             return Label
+        end
+        
+        -- Slider
+        function section:AddSlider(name, min, max, default, callback)
+            if not name then return nil end
+            
+            min = min or 0
+            max = max or 100
+            default = default or min
+            
+            local sliderValue = math.clamp(default, min, max)
+            
+            local Slider = Instance.new("Frame")
+            Slider.Size = UDim2.new(1, 0, 0, isMobile and 50 or 60)
+            Slider.BackgroundTransparency = 1
+            Slider.LayoutOrder = #SectionContent:GetChildren() + 1
+            
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(1, 0, 0, isMobile and 20 or 24)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = name .. ": " .. sliderValue
+            nameLabel.TextColor3 = WarpHub.Config.TextColor
+            nameLabel.TextSize = isMobile and 13 or 14
+            nameLabel.Font = Enum.Font.GothamMedium
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            nameLabel.Parent = Slider
+            
+            local track = Instance.new("Frame")
+            track.Size = UDim2.new(1, 0, 0, isMobile and 6 or 8)
+            track.Position = UDim2.new(0, 0, 0, isMobile and 28 or 34)
+            track.BackgroundColor3 = WarpHub.Config.SliderTrack
+            track.BackgroundTransparency = 0.2
+            track.BorderSizePixel = 0
+            
+            local trackCorner = Instance.new("UICorner")
+            trackCorner.CornerRadius = UDim.new(1, 0)
+            trackCorner.Parent = track
+            
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new(0, 0, 1, 0)
+            fill.BackgroundColor3 = WarpHub.Config.SliderFill
+            fill.BorderSizePixel = 0
+            
+            local fillCorner = Instance.new("UICorner")
+            fillCorner.CornerRadius = UDim.new(1, 0)
+            fillCorner.Parent = fill
+            
+            local handle = Instance.new("TextButton")
+            handle.Size = UDim2.new(0, isMobile and 16 or 20, 0, isMobile and 16 or 20)
+            handle.BackgroundColor3 = WarpHub.Config.AccentColor
+            handle.AutoButtonColor = false
+            handle.Text = ""
+            handle.BorderSizePixel = 0
+            
+            local handleCorner = Instance.new("UICorner")
+            handleCorner.CornerRadius = UDim.new(1, 0)
+            handleCorner.Parent = handle
+            
+            local function updateSlider(value)
+                sliderValue = math.clamp(value, min, max)
+                local percentage = (sliderValue - min) / (max - min)
+                
+                fill.Size = UDim2.new(percentage, 0, 1, 0)
+                handle.Position = UDim2.new(percentage, isMobile and -8 or -10, 0, isMobile and -8 or -10)
+                nameLabel.Text = name .. ": " .. math.floor(sliderValue)
+                
+                if callback then
+                    pcall(callback, sliderValue)
+                end
+            end
+            
+            local dragging = false
+            handle.MouseButton1Down:Connect(function()
+                dragging = true
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            track.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    local mousePosition = input.Position.X
+                    local trackPosition = track.AbsolutePosition.X
+                    local trackWidth = track.AbsoluteSize.X
+                    local relativePosition = (mousePosition - trackPosition) / trackWidth
+                    local newValue = min + (max - min) * math.clamp(relativePosition, 0, 1)
+                    updateSlider(newValue)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local mousePosition = input.Position.X
+                    local trackPosition = track.AbsolutePosition.X
+                    local trackWidth = track.AbsoluteSize.X
+                    local relativePosition = (mousePosition - trackPosition) / trackWidth
+                    local newValue = min + (max - min) * math.clamp(relativePosition, 0, 1)
+                    updateSlider(newValue)
+                end
+            end)
+            
+            fill.Parent = track
+            handle.Parent = track
+            track.Parent = Slider
+            Slider.Parent = SectionContent
+            
+            updateSlider(default)
+            updateSectionHeight()
+            
+            local sliderObj = {
+                instance = Slider,
+                GetValue = function(self)
+                    return sliderValue
+                end,
+                SetValue = function(self, value)
+                    updateSlider(value)
+                end
+            }
+            
+            return sliderObj
         end
         
         return section
