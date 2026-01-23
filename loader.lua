@@ -19,7 +19,7 @@ local CoreGui = game:GetService("CoreGui")
 --================================================================================--
 local Config = {
     -- Key System Settings
-    local CORRECT_KEY = "warpv2",
+    CORRECT_KEY = "warpv2",
     DISCORD_LINK = "https://discord.gg/warphub",
     DISCORD_INVITE_CODE = "warphub",
     
