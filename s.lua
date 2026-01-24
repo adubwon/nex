@@ -325,7 +325,7 @@ function Library.CreateWindow(Properties)
     local searchinput = Library.CreateInstance("TextBox", {
         Name = "TextBox",
         FontFace = Font.new("rbxassetid://12187365364"),
-        PlaceholderText = "Search...",
+        PlaceholderText = "(beta) Search...",
         Text = "",
         TextColor3 = Color3.fromRGB(255, 255, 255),
         TextSize = Library.GetScaledTextSize(12),
