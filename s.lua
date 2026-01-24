@@ -63,15 +63,19 @@ function Library:Window(Properties)
         Tabs = {},
         Minimized = false,
         Visible = true,
-        CreateInstance = Library.CreateInstance, -- Add the method here
+        CreateInstance = Library.CreateInstance,
     }
     
-    -- Main Frame with glass effect
+    -- Main ScreenGui - MUST be parented to PlayerGui!
+    local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     local mainframe = Library:CreateInstance("ScreenGui", {
         Name = "ModernUILibrary",
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
+        Parent = playerGui, -- CRITICAL: Parent to PlayerGui immediately
     })
+    
+    print("UI Created: Main ScreenGui")
     
     local theholderdwbbg = Library:CreateInstance("Frame", {
         Name = "MainHolder",
@@ -223,8 +227,7 @@ function Library:Window(Properties)
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        LayoutOrder = 2,
-        Size = Library.UDim2(1, 0, 0, 40),
+        Size = UDim2.new(1, 0, 0, 40),
         Parent = sidebarHolder,
     })
     
@@ -233,7 +236,7 @@ function Library:Window(Properties)
         BackgroundColor3 = Color3.fromRGB(45, 45, 45),
         BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
-        Size = Library.UDim2(1, 0, 0, 1),
+        Size = UDim2.new(1, 0, 0, 1),
         Parent = search,
     })
     
@@ -243,8 +246,8 @@ function Library:Window(Properties)
         BackgroundColor3 = Color3.fromRGB(45, 45, 45),
         BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
-        Position = UDim2.fromScale(0, 1),
-        Size = Library.UDim2(1, 0, 0, 1),
+        Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, 1),
         Parent = search,
     })
     
@@ -254,8 +257,9 @@ function Library:Window(Properties)
         BackgroundColor3 = Color3.fromRGB(35, 35, 33),
         BackgroundTransparency = 0.7,
         BorderSizePixel = 0,
-        Position = UDim2.fromScale(0.5, 0.5),
-        Size = Library.UDim2(1, -30, 0, 25),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(1, -30, 0, 25),
+        Parent = search,
     })
     
     local uICorner4 = Library:CreateInstance("UICorner", {
@@ -270,7 +274,7 @@ function Library:Window(Properties)
         AnchorPoint = Vector2.new(0, 0.5),
         BackgroundTransparency = 1,
         Position = UDim2.new(1, -25, 0.5, 0),
-        Size = UDim2.fromOffset(14, 14),
+        Size = UDim2.new(0, 14, 0, 14),
         Parent = searchzone,
     })
     
@@ -283,8 +287,8 @@ function Library:Window(Properties)
         TextSize = Library.GetScaledTextSize(12),
         TextXAlignment = Enum.TextXAlignment.Left,
         BackgroundTransparency = 1,
-        Position = UDim2.fromOffset(9, 0),
-        Size = Library.UDim2(1, -42, 1, 0),
+        Position = UDim2.new(0, 9, 0, 0),
+        Size = UDim2.new(1, -42, 1, 0),
         Parent = searchzone,
     })
     
@@ -294,10 +298,9 @@ function Library:Window(Properties)
         Parent = searchzone,
     })
     
-    searchzone.Parent = search
-    search.Parent = anothersidebarholder
+    search.Parent = sidebarHolder
     
-    anothersidebarholder.Parent = sidebarHolder
+    print("Sidebar created")
     
     -- Search functionality
     searchinput.Changed:Connect(function(property)
@@ -354,12 +357,10 @@ function Library:Window(Properties)
         BackgroundColor3 = Color3.fromRGB(45, 45, 45),
         BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
-        Position = UDim2.fromScale(1, 0),
-        Size = Library.UDim2(0, 1, 1, 0),
+        Position = UDim2.new(1, 0, 0, 0),
+        Size = UDim2.new(0, 1, 1, 0),
         Parent = sidebarHolder,
     })
-    
-    sidebarHolder.Parent = theholderdwbbg
     
     -- Content area
     local content = Library:CreateInstance("Frame", {
@@ -368,10 +369,11 @@ function Library:Window(Properties)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ClipsDescendants = true,
-        LayoutOrder = 1,
-        Size = Library.UDim2(1, -150, 1, 0),
+        Size = UDim2.new(1, -150, 1, 0),
         Parent = theholderdwbbg,
     })
+    
+    print("Content area created")
     
     -- Window functions
     function Window.UpdateTabs(self)
@@ -387,6 +389,7 @@ function Library:Window(Properties)
     
     Window.Elements = {
         MainFrame = mainframe,
+        MainHolder = theholderdwbbg,
         ContentArea = content,
         TabHolder = tabHolder,
         SearchInput = searchinput,
@@ -395,333 +398,352 @@ function Library:Window(Properties)
     -- Add CreateInstance method to Window object
     Window.CreateInstance = Library.CreateInstance
     
-    -- Initialize with first tab
-    Window.DefaultTab = nil
-    
-    -- Set up metatable
-    local windowMt = {}
-    windowMt.__index = function(self, key)
-        if key == "Tab" then
-            return function(self, Properties)
-                if not Properties then Properties = {} end
-                
-                local Tab = {
-                    Name = Properties.Title or "Tab",
-                    Icon = Properties.Icon,
-                    Window = self,
-                    Open = false,
-                    Sections = {},
-                    Elements = {},
-                    CreateInstance = Library.CreateInstance, -- Add this
-                }
-                
-                -- Tab button
-                local atab = Library:CreateInstance("TextButton", {
-                    Name = "TabButton",
-                    Text = "",
-                    AutoButtonColor = false,
-                    BackgroundColor3 = Color3.fromRGB(39, 39, 42),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    Size = Library.UDim2(1, -20, 0, 29),
-                    Parent = self.Elements.TabHolder,
-                })
-                
-                local uICorner = Library:CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(0, 6),
-                    Parent = atab,
-                })
-                
-                local uIStroke = Library:CreateInstance("UIStroke", {
-                    Color = Color3.fromRGB(31, 31, 34),
-                    Enabled = false,
-                    Parent = atab,
-                })
-                
-                local tabContent = Library:CreateInstance("ScrollingFrame", {
-                    Name = "TabContent_" .. Tab.Name,
-                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                    ScrollBarThickness = 0,
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    Position = UDim2.fromOffset(10, 1),
-                    Size = Library.UDim2(1, -20, 1.02, -10),
-                    Visible = false,
-                    Parent = self.Elements.ContentArea,
-                })
-                
-                local tabLayout = Library:CreateInstance("UIListLayout", {
-                    Padding = UDim.new(0, 16),
-                    SortOrder = Enum.SortOrder.LayoutOrder,
-                    Parent = tabContent,
-                })
-                
-                local tabPadding = Library:CreateInstance("UIPadding", {
-                    PaddingTop = UDim.new(0, 12),
-                    Parent = tabContent,
-                })
-                
-                local tabIcon
-                if Tab.Icon then
-                    tabIcon = Library:CreateInstance("ImageLabel", {
-                        Image = Tab.Icon,
-                        ImageColor3 = Color3.fromRGB(115, 115, 115),
-                        BackgroundTransparency = 1,
-                        Size = UDim2.fromOffset(12, 12),
-                        LayoutOrder = 1,
-                        Parent = atab,
-                    })
-                end
-                
-                local tabName = Library:CreateInstance("TextLabel", {
-                    Text = Tab.Name,
-                    FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-                    TextColor3 = Color3.fromRGB(115, 115, 115),
-                    TextSize = Library.GetScaledTextSize(12),
-                    BackgroundTransparency = 1,
-                    AutomaticSize = Enum.AutomaticSize.X,
-                    Size = UDim2.fromScale(0, 1),
-                    LayoutOrder = 2,
-                    Parent = atab,
-                })
-                
-                local tabInnerLayout = Library:CreateInstance("UIListLayout", {
-                    Padding = UDim.new(0, 10),
-                    FillDirection = Enum.FillDirection.Horizontal,
-                    SortOrder = Enum.SortOrder.LayoutOrder,
-                    VerticalAlignment = Enum.VerticalAlignment.Center,
-                    Parent = atab,
-                })
-                
-                local tabInnerPadding = Library:CreateInstance("UIPadding", {
-                    PaddingLeft = UDim.new(0, 8),
-                    Parent = atab,
-                })
-                
-                -- Tab functions
-                function Tab.Turn(self, bool)
-                    Tab.Open = bool
-                    local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-                    
-                    if bool then
-                        TweenService:Create(atab, tweenInfo, {
-                            BackgroundTransparency = 0.7,
-                        }):Play()
-                        
-                        uIStroke.Enabled = true
-                        
-                        if tabIcon then
-                            TweenService:Create(tabIcon, tweenInfo, {
-                                ImageColor3 = Color3.fromRGB(255, 255, 255),
-                            }):Play()
-                        end
-                        
-                        TweenService:Create(tabName, tweenInfo, {
-                            TextColor3 = Color3.fromRGB(235, 235, 235),
-                        }):Play()
-                        
-                        tabContent.Visible = true
-                    else
-                        TweenService:Create(atab, tweenInfo, {
-                            BackgroundTransparency = 1,
-                        }):Play()
-                        
-                        uIStroke.Enabled = false
-                        
-                        if tabIcon then
-                            TweenService:Create(tabIcon, tweenInfo, {
-                                ImageColor3 = Color3.fromRGB(115, 115, 115),
-                            }):Play()
-                        end
-                        
-                        TweenService:Create(tabName, tweenInfo, {
-                            TextColor3 = Color3.fromRGB(115, 115, 115),
-                        }):Play()
-                        
-                        tabContent.Visible = false
-                    end
-                end
-                
-                atab.MouseButton1Click:Connect(function()
-                    if not Tab.Open then
-                        for _, otherTab in pairs(Tab.Window.Tabs) do
-                            if otherTab.Open and otherTab ~= Tab then
-                                otherTab:Turn(false)
-                            end
-                        end
-                        Tab:Turn(true)
-                    end
-                end)
-                
-                atab.MouseEnter:Connect(function()
-                    if not Tab.Open then
-                        TweenService:Create(atab, TweenInfo.new(0.15), {
-                            BackgroundTransparency = 0.85,
-                        }):Play()
-                    end
-                end)
-                
-                atab.MouseLeave:Connect(function()
-                    if not Tab.Open then
-                        TweenService:Create(atab, TweenInfo.new(0.15), {
-                            BackgroundTransparency = 1,
-                        }):Play()
-                    end
-                end)
-                
-                Tab.Elements = {
-                    TabButton = atab,
-                    Content = tabContent,
-                    TabIcon = tabIcon,
-                    TabName = tabName,
-                }
-                
-                -- Set up section method for this tab
-                function Tab.Section(self, Properties)
+    -- Set up metatable for Window
+    setmetatable(Window, {
+        __index = function(self, key)
+            if key == "Tab" then
+                return function(self, Properties)
                     if not Properties then Properties = {} end
                     
-                    local Section = {
-                        Name = Properties.Name or "Section",
-                        Tab = self,
-                        Side = Properties.Side or "Left",
+                    print("Creating tab: " .. (Properties.Title or "Unnamed"))
+                    
+                    local Tab = {
+                        Name = Properties.Title or "Tab",
+                        Icon = Properties.Icon,
+                        Window = self,
+                        Open = false,
+                        Sections = {},
                         Elements = {},
-                        Content = {},
-                        ShowTitle = Properties.ShowTitle ~= false,
-                        CreateInstance = Library.CreateInstance, -- Add this
                     }
                     
-                    -- Create side containers if they don't exist
-                    if not self.Elements[Section.Side] then
-                        local sideContainer = Library:CreateInstance("Frame", {
-                            Name = Section.Side .. "Container",
-                            AutomaticSize = Enum.AutomaticSize.Y,
-                            BackgroundTransparency = 1,
-                            BorderSizePixel = 0,
-                            Size = UDim2.fromScale(1, 0),
-                            LayoutOrder = Section.Side == "Left" and 1 or 2,
-                            Parent = self.Elements.Content,
-                        })
-                        
-                        local sideLayout = Library:CreateInstance("UIListLayout", {
-                            Padding = UDim.new(0, 13),
-                            SortOrder = Enum.SortOrder.LayoutOrder,
-                            Parent = sideContainer,
-                        })
-                        
-                        self.Elements[Section.Side] = sideContainer
-                    end
-                    
-                    -- Section frame
-                    local section = Library:CreateInstance("Frame", {
-                        Name = "Section",
-                        AutomaticSize = Enum.AutomaticSize.Y,
-                        BackgroundColor3 = Color3.fromRGB(17, 17, 17),
-                        BackgroundTransparency = 0.4,
+                    -- Tab button
+                    local atab = Library:CreateInstance("TextButton", {
+                        Name = "TabButton",
+                        Text = "",
+                        AutoButtonColor = false,
+                        BackgroundColor3 = Color3.fromRGB(39, 39, 42),
+                        BackgroundTransparency = 1,
                         BorderSizePixel = 0,
-                        Size = Library.UDim2(1, 0, 0, 0),
-                        Parent = self.Elements[Section.Side],
+                        Size = UDim2.new(1, -20, 0, 29),
+                        Parent = self.Elements.TabHolder,
                     })
                     
                     local uICorner = Library:CreateInstance("UICorner", {
                         CornerRadius = UDim.new(0, 6),
-                        Parent = section,
+                        Parent = atab,
                     })
                     
                     local uIStroke = Library:CreateInstance("UIStroke", {
-                        Color = Color3.fromRGB(45, 45, 45),
-                        Transparency = 0.4,
-                        Parent = section,
+                        Color = Color3.fromRGB(31, 31, 34),
+                        Enabled = false,
+                        Parent = atab,
                     })
                     
-                    local sectionLayout = Library:CreateInstance("UIListLayout", {
-                        Padding = UDim.new(0, 8),
-                        SortOrder = Enum.SortOrder.LayoutOrder,
-                        Parent = section,
-                    })
-                    
-                    local sectionPadding = Library:CreateInstance("UIPadding", {
-                        PaddingTop = UDim.new(0, 5),
-                        PaddingBottom = UDim.new(0, 12),
-                        Parent = section,
-                    })
-                    
-                    -- Title
-                    if Section.ShowTitle then
-                        local titleFrame = Library:CreateInstance("Frame", {
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 0, 0, 22),
-                            LayoutOrder = 0,
-                            Parent = section,
-                        })
-                        
-                        local title = Library:CreateInstance("TextLabel", {
-                            Text = Section.Name,
-                            FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
-                            TextColor3 = Color3.fromRGB(221, 221, 221),
-                            TextSize = Library.GetScaledTextSize(14),
-                            TextXAlignment = Enum.TextXAlignment.Left,
-                            BackgroundTransparency = 1,
-                            Position = UDim2.fromOffset(8, 0),
-                            Size = UDim2.new(1, -16, 0, 25),
-                            Parent = titleFrame,
-                        })
-                        
-                        Section.Elements.Title = title
-                    end
-                    
-                    -- Content container
-                    local aholder = Library:CreateInstance("Frame", {
-                        Name = "ContentHolder",
-                        AutomaticSize = Enum.AutomaticSize.Y,
+                    local tabContent = Library:CreateInstance("ScrollingFrame", {
+                        Name = "TabContent_" .. Tab.Name,
+                        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                        ScrollBarThickness = 0,
                         BackgroundTransparency = 1,
                         BorderSizePixel = 0,
-                        Size = UDim2.new(1, 0, 0, 0),
-                        LayoutOrder = 1,
-                        Parent = section,
+                        Position = UDim2.new(0, 10, 0, 1),
+                        Size = UDim2.new(1, -20, 1, -10),
+                        Visible = false,
+                        Parent = self.Elements.ContentArea,
                     })
                     
-                    local contentLayout = Library:CreateInstance("UIListLayout", {
-                        Padding = UDim.new(0, 8),
+                    local tabLayout = Library:CreateInstance("UIListLayout", {
+                        Padding = UDim.new(0, 16),
                         SortOrder = Enum.SortOrder.LayoutOrder,
-                        Parent = aholder,
+                        Parent = tabContent,
                     })
                     
-                    local contentPadding = Library:CreateInstance("UIPadding", {
-                        PaddingLeft = UDim.new(0, 3),
-                        PaddingRight = UDim.new(0, 3),
-                        PaddingTop = UDim.new(0, 3),
-                        PaddingBottom = UDim.new(0, 3),
-                        Parent = aholder,
+                    local tabPadding = Library:CreateInstance("UIPadding", {
+                        PaddingTop = UDim.new(0, 12),
+                        Parent = tabContent,
                     })
                     
-                    Section.Elements.SectionFrame = section
-                    Section.Elements.SectionContent = aholder
-                    
-                    -- Add component methods to section
-                    function Section.Toggle(self, Properties)
-                        return Library.Sections.Toggle(Section, Properties)
+                    local tabIcon
+                    if Tab.Icon then
+                        tabIcon = Library:CreateInstance("ImageLabel", {
+                            Image = Tab.Icon,
+                            ImageColor3 = Color3.fromRGB(115, 115, 115),
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(0, 12, 0, 12),
+                            LayoutOrder = 1,
+                            Parent = atab,
+                        })
                     end
                     
-                    function Section.Dropdown(self, Properties)
-                        return Library.Sections.Dropdown(Section, Properties)
+                    local tabName = Library:CreateInstance("TextLabel", {
+                        Text = Tab.Name,
+                        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                        TextColor3 = Color3.fromRGB(115, 115, 115),
+                        TextSize = Library.GetScaledTextSize(12),
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(0, 0, 1, 0),
+                        Parent = atab,
+                    })
+                    
+                    tabName.AutomaticSize = Enum.AutomaticSize.X
+                    
+                    local tabInnerLayout = Library:CreateInstance("UIListLayout", {
+                        Padding = UDim.new(0, 10),
+                        FillDirection = Enum.FillDirection.Horizontal,
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        VerticalAlignment = Enum.VerticalAlignment.Center,
+                        Parent = atab,
+                    })
+                    
+                    local tabInnerPadding = Library:CreateInstance("UIPadding", {
+                        PaddingLeft = UDim.new(0, 8),
+                        Parent = atab,
+                    })
+                    
+                    -- Tab functions
+                    function Tab.Turn(self, bool)
+                        Tab.Open = bool
+                        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                        
+                        if bool then
+                            TweenService:Create(atab, tweenInfo, {
+                                BackgroundTransparency = 0.7,
+                            }):Play()
+                            
+                            uIStroke.Enabled = true
+                            
+                            if tabIcon then
+                                TweenService:Create(tabIcon, tweenInfo, {
+                                    ImageColor3 = Color3.fromRGB(255, 255, 255),
+                                }):Play()
+                            end
+                            
+                            TweenService:Create(tabName, tweenInfo, {
+                                TextColor3 = Color3.fromRGB(235, 235, 235),
+                            }):Play()
+                            
+                            tabContent.Visible = true
+                            print("Tab opened: " .. Tab.Name)
+                        else
+                            TweenService:Create(atab, tweenInfo, {
+                                BackgroundTransparency = 1,
+                            }):Play()
+                            
+                            uIStroke.Enabled = false
+                            
+                            if tabIcon then
+                                TweenService:Create(tabIcon, tweenInfo, {
+                                    ImageColor3 = Color3.fromRGB(115, 115, 115),
+                                }):Play()
+                            end
+                            
+                            TweenService:Create(tabName, tweenInfo, {
+                                TextColor3 = Color3.fromRGB(115, 115, 115),
+                            }):Play()
+                            
+                            tabContent.Visible = false
+                        end
                     end
                     
-                    return Section
+                    atab.MouseButton1Click:Connect(function()
+                        if not Tab.Open then
+                            for _, otherTab in pairs(Tab.Window.Tabs) do
+                                if otherTab.Open and otherTab ~= Tab then
+                                    otherTab:Turn(false)
+                                end
+                            end
+                            Tab:Turn(true)
+                        end
+                    end)
+                    
+                    atab.MouseEnter:Connect(function()
+                        if not Tab.Open then
+                            TweenService:Create(atab, TweenInfo.new(0.15), {
+                                BackgroundTransparency = 0.85,
+                            }):Play()
+                        end
+                    end)
+                    
+                    atab.MouseLeave:Connect(function()
+                        if not Tab.Open then
+                            TweenService:Create(atab, TweenInfo.new(0.15), {
+                                BackgroundTransparency = 1,
+                            }):Play()
+                        end
+                    end)
+                    
+                    Tab.Elements = {
+                        TabButton = atab,
+                        Content = tabContent,
+                        TabIcon = tabIcon,
+                        TabName = tabName,
+                    }
+                    
+                    -- Set up section method for this tab
+                    setmetatable(Tab, {
+                        __index = function(self, key)
+                            if key == "Section" then
+                                return function(self, Properties)
+                                    if not Properties then Properties = {} end
+                                    
+                                    print("Creating section: " .. (Properties.Name or "Unnamed"))
+                                    
+                                    local Section = {
+                                        Name = Properties.Name or "Section",
+                                        Tab = self,
+                                        Side = Properties.Side or "Left",
+                                        Elements = {},
+                                        Content = {},
+                                        ShowTitle = Properties.ShowTitle ~= false,
+                                    }
+                                    
+                                    -- Create side containers if they don't exist
+                                    if not self.Elements[Section.Side] then
+                                        local sideContainer = Library:CreateInstance("Frame", {
+                                            Name = Section.Side .. "Container",
+                                            AutomaticSize = Enum.AutomaticSize.Y,
+                                            BackgroundTransparency = 1,
+                                            BorderSizePixel = 0,
+                                            Size = UDim2.new(1, 0, 0, 0),
+                                            Parent = self.Elements.Content,
+                                        })
+                                        
+                                        local sideLayout = Library:CreateInstance("UIListLayout", {
+                                            Padding = UDim.new(0, 13),
+                                            SortOrder = Enum.SortOrder.LayoutOrder,
+                                            Parent = sideContainer,
+                                        })
+                                        
+                                        self.Elements[Section.Side] = sideContainer
+                                    end
+                                    
+                                    -- Section frame
+                                    local section = Library:CreateInstance("Frame", {
+                                        Name = "Section",
+                                        AutomaticSize = Enum.AutomaticSize.Y,
+                                        BackgroundColor3 = Color3.fromRGB(17, 17, 17),
+                                        BackgroundTransparency = 0.4,
+                                        BorderSizePixel = 0,
+                                        Size = UDim2.new(1, 0, 0, 0),
+                                        Parent = self.Elements[Section.Side],
+                                    })
+                                    
+                                    local uICorner = Library:CreateInstance("UICorner", {
+                                        CornerRadius = UDim.new(0, 6),
+                                        Parent = section,
+                                    })
+                                    
+                                    local uIStroke = Library:CreateInstance("UIStroke", {
+                                        Color = Color3.fromRGB(45, 45, 45),
+                                        Transparency = 0.4,
+                                        Parent = section,
+                                    })
+                                    
+                                    local sectionLayout = Library:CreateInstance("UIListLayout", {
+                                        Padding = UDim.new(0, 8),
+                                        SortOrder = Enum.SortOrder.LayoutOrder,
+                                        Parent = section,
+                                    })
+                                    
+                                    local sectionPadding = Library:CreateInstance("UIPadding", {
+                                        PaddingTop = UDim.new(0, 5),
+                                        PaddingBottom = UDim.new(0, 12),
+                                        Parent = section,
+                                    })
+                                    
+                                    -- Title
+                                    if Section.ShowTitle then
+                                        local titleFrame = Library:CreateInstance("Frame", {
+                                            BackgroundTransparency = 1,
+                                            Size = UDim2.new(1, 0, 0, 22),
+                                            LayoutOrder = 0,
+                                            Parent = section,
+                                        })
+                                        
+                                        local title = Library:CreateInstance("TextLabel", {
+                                            Text = Section.Name,
+                                            FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                                            TextColor3 = Color3.fromRGB(221, 221, 221),
+                                            TextSize = Library.GetScaledTextSize(14),
+                                            TextXAlignment = Enum.TextXAlignment.Left,
+                                            BackgroundTransparency = 1,
+                                            Position = UDim2.new(0, 8, 0, 0),
+                                            Size = UDim2.new(1, -16, 0, 25),
+                                            Parent = titleFrame,
+                                        })
+                                        
+                                        Section.Elements.Title = title
+                                    end
+                                    
+                                    -- Content container
+                                    local aholder = Library:CreateInstance("Frame", {
+                                        Name = "ContentHolder",
+                                        AutomaticSize = Enum.AutomaticSize.Y,
+                                        BackgroundTransparency = 1,
+                                        BorderSizePixel = 0,
+                                        Size = UDim2.new(1, 0, 0, 0),
+                                        LayoutOrder = 1,
+                                        Parent = section,
+                                    })
+                                    
+                                    local contentLayout = Library:CreateInstance("UIListLayout", {
+                                        Padding = UDim.new(0, 8),
+                                        SortOrder = Enum.SortOrder.LayoutOrder,
+                                        Parent = aholder,
+                                    })
+                                    
+                                    local contentPadding = Library:CreateInstance("UIPadding", {
+                                        PaddingLeft = UDim.new(0, 3),
+                                        PaddingRight = UDim.new(0, 3),
+                                        PaddingTop = UDim.new(0, 3),
+                                        PaddingBottom = UDim.new(0, 3),
+                                        Parent = aholder,
+                                    })
+                                    
+                                    Section.Elements.SectionFrame = section
+                                    Section.Elements.SectionContent = aholder
+                                    
+                                    -- Add component methods to section
+                                    setmetatable(Section, {
+                                        __index = function(self, key)
+                                            if key == "Toggle" then
+                                                return function(self, Properties)
+                                                    return Library.Sections.Toggle(self, Properties)
+                                                end
+                                            elseif key == "Dropdown" then
+                                                return function(self, Properties)
+                                                    return Library.Sections.Dropdown(self, Properties)
+                                                end
+                                            elseif key == "Label" then
+                                                return function(self, Properties)
+                                                    return Library.Sections.Label(self, Properties)
+                                                end
+                                            end
+                                            return Library.Sections[key]
+                                        end
+                                    })
+                                    
+                                    print("Section created: " .. Section.Name)
+                                    return Section
+                                end
+                            end
+                            return nil
+                        end
+                    })
+                    
+                    table.insert(self.Tabs, Tab)
+                    
+                    if #self.Tabs == 1 then
+                        Tab:Turn(true)
+                    end
+                    
+                    return Tab
                 end
-                
-                table.insert(self.Tabs, Tab)
-                
-                if #self.Tabs == 1 then
-                    Tab:Turn(true)
-                end
-                
-                return Tab
             end
+            return rawget(self, key) or Library[key]
         end
-        return rawget(self, key) or Library[key]
-    end
+    })
     
-    setmetatable(Window, windowMt)
+    print("Window created successfully!")
     return Window
 end
 
@@ -730,6 +752,8 @@ Library.Sections = {}
 
 function Library.Sections.Toggle(section, Properties)
     if not Properties then Properties = {} end
+    
+    print("Creating toggle: " .. (Properties.Name or "Unnamed"))
     
     local Toggle = {
         Name = Properties.Name or "Toggle",
@@ -981,6 +1005,8 @@ end
 
 function Library.Sections.Dropdown(section, Properties)
     if not Properties then Properties = {} end
+    
+    print("Creating dropdown: " .. (Properties.Name or "Unnamed"))
     
     local Dropdown = {
         Name = Properties.Name or "Dropdown",
@@ -1441,4 +1467,33 @@ function Library.Sections.Dropdown(section, Properties)
     return Dropdown
 end
 
+-- Simple Label method for sections
+function Library.Sections.Label(section, Properties)
+    if not Properties then Properties = {} end
+    
+    local Label = {
+        Text = Properties.Text or "Label",
+        Elements = {},
+    }
+    
+    local label = Library:CreateInstance("TextLabel", {
+        Name = "Label",
+        Text = Label.Text,
+        FontFace = Font.new("rbxassetid://12187365364"),
+        TextColor3 = Color3.fromRGB(115, 115, 115),
+        TextSize = Library.GetScaledTextSize(12),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 25),
+        Parent = section.Elements.SectionContent,
+    })
+    
+    Label.Elements = {
+        Label = label,
+    }
+    
+    return Label
+end
+
+print("Modern UI Library Loaded Successfully!")
 return Library
