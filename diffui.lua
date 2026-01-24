@@ -1494,16 +1494,32 @@ function Kavo.CreateLib(kavName, themeList)
                 
                 dropFrame.Name = "dropFrame"
                 dropFrame.Parent = sectionInners
-                dropFrame.BackgroundColor3 = themeList.Background
+                dropFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+                dropFrame.BackgroundTransparency = 0.15 -- Glass effect transparency
                 dropFrame.BorderSizePixel = 0
                 dropFrame.Position = UDim2.new(0, 0, 1.23571432, 0)
                 dropFrame.Size = UDim2.new(0, 352, 0, 33)
                 dropFrame.ClipsDescendants = true
+                
+                -- Add glass effect border
+                local glassBorder = Instance.new("UIStroke")
+                glassBorder.Name = "GlassBorder"
+                glassBorder.Parent = dropFrame
+                glassBorder.Color = Color3.new(1, 1, 1)
+                glassBorder.Transparency = 0.7
+                glassBorder.Thickness = 1
+                
+                local glassCorner = Instance.new("UICorner")
+                glassCorner.Name = "GlassCorner"
+                glassCorner.Parent = dropFrame
+                glassCorner.CornerRadius = UDim.new(0, 4)
+                
                 local sample = Sample
                 local btn = dropOpen
                 dropOpen.Name = "dropOpen"
                 dropOpen.Parent = dropFrame
                 dropOpen.BackgroundColor3 = themeList.ElementColor
+                dropOpen.BackgroundTransparency = 0.1 -- Slight transparency for glass effect
                 dropOpen.Size = UDim2.new(0, 352, 0, 33)
                 dropOpen.AutoButtonColor = false
                 dropOpen.Font = Enum.Font.SourceSans
@@ -1607,16 +1623,6 @@ function Kavo.CreateLib(kavName, themeList)
                 UICorner.CornerRadius = UDim.new(0, 4)
                 UICorner.Parent = dropOpen
 
-                local Sample = Instance.new("ImageLabel")
-
-                Sample.Name = "Sample"
-                Sample.Parent = dropOpen
-                Sample.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Sample.BackgroundTransparency = 1.000
-                Sample.Image = "http://www.roblox.com/asset/?id=4560909609"
-                Sample.ImageColor3 = themeList.SchemeColor
-                Sample.ImageTransparency = 0.600
-
                 UIListLayout.Parent = dropFrame
                 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
                 UIListLayout.Padding = UDim.new(0, 3)
@@ -1648,7 +1654,8 @@ function Kavo.CreateLib(kavName, themeList)
                 btn.MouseEnter:Connect(function()
                     if not focusing then
                         game.TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                            BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10)
+                            BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10),
+                            BackgroundTransparency = 0.05 -- Keep some transparency
                         }):Play()
                         hovering = true
                     end 
@@ -1656,7 +1663,8 @@ function Kavo.CreateLib(kavName, themeList)
                 btn.MouseLeave:Connect(function()
                     if not focusing then
                         game.TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                            BackgroundColor3 = themeList.ElementColor
+                            BackgroundColor3 = themeList.ElementColor,
+                            BackgroundTransparency = 0.1
                         }):Play()
                         hovering = false
                     end
@@ -1665,9 +1673,13 @@ function Kavo.CreateLib(kavName, themeList)
                     while wait() do
                         if not hovering then
                             dropOpen.BackgroundColor3 = themeList.ElementColor
+                            dropOpen.BackgroundTransparency = 0.1
                         end
                         Sample.ImageColor3 = themeList.SchemeColor
-                        dropFrame.BackgroundColor3 = themeList.Background
+                        dropFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+                        dropFrame.BackgroundTransparency = 0.15
+                        glassBorder.Color = Color3.new(1, 1, 1)
+                        glassBorder.Transparency = 0.7
                         listImg.ImageColor3 = themeList.SchemeColor
                         itemTextbox.TextColor3 = themeList.TextColor
                         viewInfo.ImageColor3 = themeList.SchemeColor
@@ -1710,6 +1722,7 @@ function Kavo.CreateLib(kavName, themeList)
                     local optionSelect = Instance.new("TextButton")
                     local UICorner_2 = Instance.new("UICorner")
                     local Sample1 = Instance.new("ImageLabel")
+                    local optionGlassBorder = Instance.new("UIStroke")
 
                     local ms = game.Players.LocalPlayer:GetMouse()
                     Sample1.Name = "Sample1"
@@ -1725,6 +1738,7 @@ function Kavo.CreateLib(kavName, themeList)
                     optionSelect.Name = "optionSelect"
                     optionSelect.Parent = dropFrame
                     optionSelect.BackgroundColor3 = themeList.ElementColor
+                    optionSelect.BackgroundTransparency = 0.2 -- Glass effect for options
                     optionSelect.Position = UDim2.new(0, 0, 0.235294119, 0)
                     optionSelect.Size = UDim2.new(0, 352, 0, 33)
                     optionSelect.AutoButtonColor = false
@@ -1734,6 +1748,14 @@ function Kavo.CreateLib(kavName, themeList)
                     optionSelect.TextSize = 14.000
                     optionSelect.TextXAlignment = Enum.TextXAlignment.Left
                     optionSelect.ClipsDescendants = true
+                    
+                    -- Add glass border to option
+                    optionGlassBorder.Name = "GlassBorder"
+                    optionGlassBorder.Parent = optionSelect
+                    optionGlassBorder.Color = Color3.new(1, 1, 1)
+                    optionGlassBorder.Transparency = 0.7
+                    optionGlassBorder.Thickness = 1
+                    
                     optionSelect.MouseButton1Click:Connect(function()
                         if not focusing then
                             opened = false
@@ -1775,7 +1797,8 @@ function Kavo.CreateLib(kavName, themeList)
                     optionSelect.MouseEnter:Connect(function()
                         if not focusing then
                             game.TweenService:Create(optionSelect, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                                BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10)
+                                BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10),
+                                BackgroundTransparency = 0.1 -- Less transparent on hover
                             }):Play()
                             oHover = true
                         end 
@@ -1783,7 +1806,8 @@ function Kavo.CreateLib(kavName, themeList)
                     optionSelect.MouseLeave:Connect(function()
                         if not focusing then
                             game.TweenService:Create(optionSelect, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                                BackgroundColor3 = themeList.ElementColor
+                                BackgroundColor3 = themeList.ElementColor,
+                                BackgroundTransparency = 0.2
                             }):Play()
                             oHover = false
                         end
@@ -1792,9 +1816,12 @@ function Kavo.CreateLib(kavName, themeList)
                         while wait() do
                             if not oHover then
                                 optionSelect.BackgroundColor3 = themeList.ElementColor
+                                optionSelect.BackgroundTransparency = 0.2
                             end
                             optionSelect.TextColor3 = Color3.fromRGB(themeList.TextColor.r * 255 - 6, themeList.TextColor.g * 255 - 6, themeList.TextColor.b * 255 - 6)
                             Sample1.ImageColor3 = themeList.SchemeColor
+                            optionGlassBorder.Color = Color3.new(1, 1, 1)
+                            optionGlassBorder.Transparency = 0.7
                         end
                     end)()
                 end
@@ -1810,6 +1837,7 @@ function Kavo.CreateLib(kavName, themeList)
                         local optionSelect = Instance.new("TextButton")
                         local UICorner_2 = Instance.new("UICorner")
                         local Sample11 = Instance.new("ImageLabel")
+                        local optionGlassBorder = Instance.new("UIStroke")
                         local ms = game.Players.LocalPlayer:GetMouse()
                         Sample11.Name = "Sample11"
                         Sample11.Parent = optionSelect
@@ -1824,6 +1852,7 @@ function Kavo.CreateLib(kavName, themeList)
                         optionSelect.Name = "optionSelect"
                         optionSelect.Parent = dropFrame
                         optionSelect.BackgroundColor3 = themeList.ElementColor
+                        optionSelect.BackgroundTransparency = 0.2
                         optionSelect.Position = UDim2.new(0, 0, 0.235294119, 0)
                         optionSelect.Size = UDim2.new(0, 352, 0, 33)
                         optionSelect.AutoButtonColor = false
@@ -1833,6 +1862,14 @@ function Kavo.CreateLib(kavName, themeList)
                         optionSelect.TextSize = 14.000
                         optionSelect.TextXAlignment = Enum.TextXAlignment.Left
                         optionSelect.ClipsDescendants = true
+                        
+                        -- Add glass border
+                        optionGlassBorder.Name = "GlassBorder"
+                        optionGlassBorder.Parent = optionSelect
+                        optionGlassBorder.Color = Color3.new(1, 1, 1)
+                        optionGlassBorder.Transparency = 0.7
+                        optionGlassBorder.Thickness = 1
+                        
                         UICorner_2.CornerRadius = UDim.new(0, 4)
                         UICorner_2.Parent = optionSelect
                         optionSelect.MouseButton1Click:Connect(function()
@@ -1874,7 +1911,8 @@ function Kavo.CreateLib(kavName, themeList)
                         optionSelect.MouseEnter:Connect(function()
                             if not focusing then
                                 game.TweenService:Create(optionSelect, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                                    BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10)
+                                    BackgroundColor3 = Color3.fromRGB(themeList.ElementColor.r * 255 + 8, themeList.ElementColor.g * 255 + 9, themeList.ElementColor.b * 255 + 10),
+                                    BackgroundTransparency = 0.1
                                 }):Play()
                                 hov = true
                             end 
@@ -1882,7 +1920,8 @@ function Kavo.CreateLib(kavName, themeList)
                         optionSelect.MouseLeave:Connect(function()
                             if not focusing then
                                 game.TweenService:Create(optionSelect, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                                    BackgroundColor3 = themeList.ElementColor
+                                    BackgroundColor3 = themeList.ElementColor,
+                                    BackgroundTransparency = 0.2
                                 }):Play()
                                 hov = false
                             end
@@ -1891,9 +1930,12 @@ function Kavo.CreateLib(kavName, themeList)
                             while wait() do
                                 if not oHover then
                                     optionSelect.BackgroundColor3 = themeList.ElementColor
+                                    optionSelect.BackgroundTransparency = 0.2
                                 end
                                 optionSelect.TextColor3 = Color3.fromRGB(themeList.TextColor.r * 255 - 6, themeList.TextColor.g * 255 - 6, themeList.TextColor.b * 255 - 6)
                                 Sample11.ImageColor3 = themeList.SchemeColor
+                                optionGlassBorder.Color = Color3.new(1, 1, 1)
+                                optionGlassBorder.Transparency = 0.7
                             end
                         end)()
                     end
