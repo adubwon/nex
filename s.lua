@@ -1,4 +1,4 @@
--- Modern Roblox UI Library with Glassy Design
+-- Modern Roblox UI Library with Glassy Design - Updated Version
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -59,7 +59,7 @@ function Library.CreateWindow(Properties)
     local mainframe = Library.CreateInstance("ScreenGui", {
         Name = "ModernUILibrary",
         ResetOnSpawn = false,
-        ZIndexBehavior = Enum.ZIndexBehavior.Global,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         Parent = playerGui,
     })
     
@@ -103,7 +103,112 @@ function Library.CreateWindow(Properties)
         Parent = theholderdwbbg,
     })
     
-    -- Drag functionality
+    -- Title Bar
+    local titleBar = Library.CreateInstance("Frame", {
+        Name = "TitleBar",
+        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+        BackgroundTransparency = 0.3,
+        BorderSizePixel = 0,
+        Size = Library.UDim2(1, 0, 0, 30),
+        Parent = theholderdwbbg,
+    })
+    
+    Library.CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 12, 0, 0),
+        Parent = titleBar,
+    })
+    
+    local titleText = Library.CreateInstance("TextLabel", {
+        Name = "TitleText",
+        Text = Window.Name,
+        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = Library.GetScaledTextSize(14),
+        BackgroundTransparency = 1,
+        Position = Library.UDim2(0, 15, 0, 0),
+        Size = Library.UDim2(0, 200, 1, 0),
+        Parent = titleBar,
+    })
+    
+    -- Window control buttons
+    local minimizeButton = Library.CreateInstance("TextButton", {
+        Name = "MinimizeButton",
+        Text = "─",
+        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold),
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = Library.GetScaledTextSize(14),
+        AutoButtonColor = false,
+        BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+        BackgroundTransparency = 0.5,
+        BorderSizePixel = 0,
+        Position = Library.UDim2(1, -55, 0.5, 0),
+        AnchorPoint = Vector2.new(1, 0.5),
+        Size = Library.UDim2(0, 20, 0, 20),
+        Parent = titleBar,
+    })
+    
+    Library.CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 4),
+        Parent = minimizeButton,
+    })
+    
+    local closeButton = Library.CreateInstance("TextButton", {
+        Name = "CloseButton",
+        Text = "×",
+        FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold),
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = Library.GetScaledTextSize(16),
+        AutoButtonColor = false,
+        BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+        BackgroundTransparency = 0.5,
+        BorderSizePixel = 0,
+        Position = Library.UDim2(1, -25, 0.5, 0),
+        AnchorPoint = Vector2.new(1, 0.5),
+        Size = Library.UDim2(0, 20, 0, 20),
+        Parent = titleBar,
+    })
+    
+    Library.CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 4),
+        Parent = closeButton,
+    })
+    
+    -- Hover effects for control buttons
+    minimizeButton.MouseEnter:Connect(function()
+        TweenService:Create(minimizeButton, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(50, 50, 60),
+        }):Play()
+    end)
+    
+    minimizeButton.MouseLeave:Connect(function()
+        TweenService:Create(minimizeButton, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+        }):Play()
+    end)
+    
+    closeButton.MouseEnter:Connect(function()
+        TweenService:Create(closeButton, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(220, 60, 60),
+        }):Play()
+    end)
+    
+    closeButton.MouseLeave:Connect(function()
+        TweenService:Create(closeButton, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+        }):Play()
+    end)
+    
+    -- Content area (below title bar)
+    local contentArea = Library.CreateInstance("Frame", {
+        Name = "ContentArea",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Position = Library.UDim2(0, 0, 0, 30),
+        Size = Library.UDim2(1, 0, 1, -30),
+        Parent = theholderdwbbg,
+    })
+    
+    -- Drag functionality (only on title bar)
     local dragging = false
     local dragInput
     local dragStart
@@ -119,7 +224,7 @@ function Library.CreateWindow(Properties)
         )
     end
     
-    theholderdwbbg.InputBegan:Connect(function(input)
+    titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -152,11 +257,11 @@ function Library.CreateWindow(Properties)
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
         Size = Library.UDim2(0, 155, 1, 0),
-        Parent = theholderdwbbg,
+        Parent = contentArea,
     })
     
     Library.CreateInstance("UICorner", {
-        CornerRadius = UDim.new(0, 12, 0, 0),
+        CornerRadius = UDim.new(0, 0, 0, 12),
         Parent = sidebarHolder,
     })
     
@@ -281,7 +386,7 @@ function Library.CreateWindow(Properties)
         Parent = sidebarHolder,
     })
     
-    -- Content area
+    -- Content area (main)
     local content = Library.CreateInstance("Frame", {
         Name = "content",
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -290,7 +395,7 @@ function Library.CreateWindow(Properties)
         ClipsDescendants = true,
         Size = Library.UDim2(1, -155, 1, 0),
         Position = Library.UDim2(0, 155, 0, 0),
-        Parent = theholderdwbbg,
+        Parent = contentArea,
     })
     
     -- Search functionality
@@ -343,6 +448,32 @@ function Library.CreateWindow(Properties)
                     tab.Elements.TabButton.Visible = true
                 end
             end
+        end
+    end)
+    
+    -- Control button functionality
+    minimizeButton.MouseButton1Click:Connect(function()
+        Window.Minimized = not Window.Minimized
+        if Window.Minimized then
+            contentArea.Visible = false
+            minimizeButton.Text = "□"
+            theholderdwbbg.Size = Library.UDim2(0, 200, 0, 30)
+        else
+            contentArea.Visible = true
+            minimizeButton.Text = "─"
+            theholderdwbbg.Size = Window.Size
+        end
+    end)
+    
+    closeButton.MouseButton1Click:Connect(function()
+        mainframe:Destroy()
+        Window.Visible = false
+    end)
+    
+    -- Right Control toggle
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.RightControl then
+            theholderdwbbg.Visible = not theholderdwbbg.Visible
         end
     end)
     
@@ -683,7 +814,7 @@ function Library.CreateWindow(Properties)
             
             -- Define all component methods within the Section
             
-            -- Toggle function
+            -- FIXED Toggle function (even, properly aligned)
             function Section:Toggle(Properties)
                 if not Properties then Properties = {} end
                 
@@ -697,33 +828,33 @@ function Library.CreateWindow(Properties)
                 local toggle = Library.CreateInstance("Frame", {
                     Name = "Toggle_" .. Toggle.Name,
                     BackgroundTransparency = 1,
-                    Size = Library.UDim2(1, 0, 0, 25),
+                    Size = Library.UDim2(1, 0, 0, 28),
                     Parent = self.Elements.SectionContent,
                 })
                 
                 local toggleLabel = Library.CreateInstance("TextLabel", {
                     Text = Toggle.Name,
-                    FontFace = Font.new("rbxassetid://12187365364"),
-                    TextColor3 = Color3.fromRGB(115, 115, 115),
+                    FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
+                    TextColor3 = Color3.fromRGB(150, 150, 150),
                     TextSize = Library.GetScaledTextSize(12),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BackgroundTransparency = 1,
-                    Position = Library.UDim2(0, 8, 0, 2),
+                    Position = Library.UDim2(0, 0, 0, 0),
                     Size = Library.UDim2(1, -50, 1, 0),
                     Parent = toggle,
                 })
                 
-                -- Toggle button
+                -- FIXED: Even, properly aligned toggle button
                 local toggleButton = Library.CreateInstance("TextButton", {
                     Name = "ToggleButton",
                     Text = "",
                     AutoButtonColor = false,
-                    AnchorPoint = Vector2.new(1, 0),
-                    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
                     BackgroundTransparency = 0.2,
                     BorderSizePixel = 0,
-                    Position = Library.UDim2(1, -8, 0, 2),
-                    Size = Library.UDim2(0, 36, 0, 21),
+                    Position = Library.UDim2(1, 0, 0.5, 0),
+                    Size = Library.UDim2(0, 40, 0, 22),
                     Parent = toggle,
                 })
                 
@@ -739,14 +870,14 @@ function Library.CreateWindow(Properties)
                     Parent = toggleButton,
                 })
                 
-                -- Toggle knob
+                -- FIXED: Even toggle knob
                 local toggleKnob = Library.CreateInstance("Frame", {
                     Name = "ToggleKnob",
                     BackgroundColor3 = Color3.fromRGB(240, 240, 240),
                     BackgroundTransparency = 0,
                     BorderSizePixel = 0,
-                    Position = Library.UDim2(0, 3, 0.5, -7),
-                    Size = Library.UDim2(0, 14, 0, 14),
+                    Position = Library.UDim2(0, 3, 0.5, 0),
+                    Size = Library.UDim2(0, 16, 0, 16),
                     AnchorPoint = Vector2.new(0, 0.5),
                     Parent = toggleButton,
                 })
@@ -764,7 +895,7 @@ function Library.CreateWindow(Properties)
                 
                 -- Set initial state
                 if Toggle.Value then
-                    toggleKnob.Position = Library.UDim2(1, -17, 0.5, -7)
+                    toggleKnob.Position = Library.UDim2(1, -19, 0.5, 0)
                     toggleButton.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
                     glassStroke.Color = Color3.fromRGB(120, 180, 255)
                     toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -776,7 +907,7 @@ function Library.CreateWindow(Properties)
                     
                     if Toggle.Value then
                         TweenService:Create(toggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            Position = Library.UDim2(1, -17, 0.5, -7),
+                            Position = Library.UDim2(1, -19, 0.5, 0),
                         }):Play()
                         
                         TweenService:Create(toggleButton, TweenInfo.new(0.2), {
@@ -788,11 +919,11 @@ function Library.CreateWindow(Properties)
                         }):Play()
                     else
                         TweenService:Create(toggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            Position = Library.UDim2(0, 3, 0.5, -7),
+                            Position = Library.UDim2(0, 3, 0.5, 0),
                         }):Play()
                         
                         TweenService:Create(toggleButton, TweenInfo.new(0.2), {
-                            BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
                         }):Play()
                         
                         TweenService:Create(glassStroke, TweenInfo.new(0.2), {
@@ -811,19 +942,19 @@ function Library.CreateWindow(Properties)
                     
                     if not Toggle.Value then
                         TweenService:Create(toggleButton, TweenInfo.new(0.15), {
-                            BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+                            BackgroundColor3 = Color3.fromRGB(45, 45, 45),
                         }):Play()
                     end
                 end
                 
                 local function onLeave()
                     TweenService:Create(toggleLabel, TweenInfo.new(0.15), {
-                        TextColor3 = Color3.fromRGB(115, 115, 115),
+                        TextColor3 = Color3.fromRGB(150, 150, 150),
                     }):Play()
                     
                     if not Toggle.Value then
                         TweenService:Create(toggleButton, TweenInfo.new(0.15), {
-                            BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
                         }):Play()
                     end
                 end
@@ -949,7 +1080,7 @@ function Library.CreateWindow(Properties)
                 local sliderframe = Library.CreateInstance("Frame", {
                     Name = "Sliderframe",
                     BackgroundTransparency = 1,
-                    Size = Library.UDim2(1, 0, 0, 20),
+                    Size = Library.UDim2(1, 0, 0, 28),
                     Parent = self.Elements.SectionContent,
                 })
                 
@@ -962,14 +1093,15 @@ function Library.CreateWindow(Properties)
                 
                 local slidername = Library.CreateInstance("TextLabel", {
                     Name = "Slidername",
-                    FontFace = Font.new("rbxassetid://12187365364"),
+                    FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
                     Text = Slider.Name,
-                    TextColor3 = Color3.fromRGB(115, 115, 115),
+                    TextColor3 = Color3.fromRGB(150, 150, 150),
                     TextSize = Library.GetScaledTextSize(12),
                     TextXAlignment = Enum.TextXAlignment.Left,
                     BackgroundTransparency = 1,
-                    Position = Library.UDim2(0, 8, 0, 0),
-                    Size = Library.UDim2(1, -52, 1, 0),
+                    Position = Library.UDim2(0, 0, 0.5, 0),
+                    AnchorPoint = Vector2.new(0, 0.5),
+                    Size = Library.UDim2(1, -90, 0, 15),
                     Parent = textHolder,
                 })
                 
@@ -977,14 +1109,14 @@ function Library.CreateWindow(Properties)
                     Name = "Thebgofsliderbar",
                     AnchorPoint = Vector2.new(1, 0.5),
                     BackgroundColor3 = Color3.fromRGB(33, 32, 43),
-                    BackgroundTransparency = 1,
-                    Position = Library.UDim2(1, -7, 0.5, 0),
-                    Size = Library.UDim2(1, -120, 0, 8),
+                    BackgroundTransparency = 0.5,
+                    Position = Library.UDim2(1, 0, 0.5, 0),
+                    Size = Library.UDim2(0, 90, 0, 8),
                     Parent = sliderframe,
                 })
                 
                 Library.CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(0, 1),
+                    CornerRadius = UDim.new(0, 4),
                     Parent = thebgofsliderbar,
                 })
                 
@@ -996,33 +1128,28 @@ function Library.CreateWindow(Properties)
                 
                 local thesliderbar = Library.CreateInstance("Frame", {
                     Name = "Thesliderbar",
-                    BackgroundColor3 = Color3.fromRGB(43, 43, 43),
+                    BackgroundColor3 = Color3.fromRGB(100, 180, 255),
                     Size = Library.UDim2(0, 0, 1, 0),
                     Parent = thebgofsliderbar,
                 })
                 
-                local uIStroke = Library.CreateInstance("UIStroke", {
-                    Color = Color3.fromRGB(38, 38, 36),
-                    Parent = thesliderbar,
-                })
-                
                 Library.CreateInstance("UICorner", {
-                    CornerRadius = UDim.new(0, 1),
+                    CornerRadius = UDim.new(0, 4),
                     Parent = thesliderbar,
                 })
                 
                 local slidertextbox = Library.CreateInstance("TextBox", {
                     Name = "Slidertextbox",
-                    FontFace = Font.new("rbxassetid://12187365364"),
+                    FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
                     Text = "50",
-                    TextColor3 = Color3.fromRGB(67, 67, 68),
-                    TextSize = Library.GetScaledTextSize(12),
-                    TextXAlignment = Enum.TextXAlignment.Right,
+                    TextColor3 = Color3.fromRGB(180, 180, 180),
+                    TextSize = Library.GetScaledTextSize(11),
+                    TextXAlignment = Enum.TextXAlignment.Center,
                     BackgroundTransparency = 1,
                     AnchorPoint = Vector2.new(1, 0.5),
-                    Position = Library.UDim2(1, 0, 0.5, 0),
-                    Size = Library.UDim2(0.5, 0, 1, 4),
-                    Parent = thebgofsliderbar,
+                    Position = Library.UDim2(1, -95, 0.5, 0),
+                    Size = Library.UDim2(0, 40, 1, 0),
+                    Parent = sliderframe,
                 })
                 
                 local Sliding = false
@@ -1112,11 +1239,11 @@ function Library.CreateWindow(Properties)
                     local hoverTween = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
                     
                     TweenService:Create(slidername, hoverTween, {
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
+                        TextColor3 = Color3.fromRGB(220, 220, 220),
                     }):Play()
                     
                     TweenService:Create(slidertextbox, hoverTween, {
-                        TextColor3 = Color3.fromRGB(255, 255, 255),
+                        TextColor3 = Color3.fromRGB(220, 220, 220),
                     }):Play()
                 end)
                 
@@ -1124,11 +1251,11 @@ function Library.CreateWindow(Properties)
                     local hoverTween = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
                     
                     TweenService:Create(slidername, hoverTween, {
-                        TextColor3 = Color3.fromRGB(115, 115, 115),
+                        TextColor3 = Color3.fromRGB(150, 150, 150),
                     }):Play()
                     
                     TweenService:Create(slidertextbox, hoverTween, {
-                        TextColor3 = Color3.fromRGB(67, 67, 68),
+                        TextColor3 = Color3.fromRGB(180, 180, 180),
                     }):Play()
                 end)
                 
@@ -1145,7 +1272,7 @@ function Library.CreateWindow(Properties)
                 return Slider
             end
             
-            -- Dropdown function
+            -- UPDATED Dropdown function with multi-select and proper ZIndex
             function Section:Dropdown(Properties)
                 if not Properties then Properties = {} end
                 
@@ -1153,12 +1280,19 @@ function Library.CreateWindow(Properties)
                     Name = Properties.Name or "Dropdown",
                     Options = Properties.Options or {},
                     Default = Properties.Default,
+                    MultiSelect = Properties.MultiSelect or false,
                     Callback = Properties.Callback or function() end,
                     Value = Properties.Default or nil,
                     Searchable = Properties.Searchable ~= false,
                     isOpen = false,
+                    SelectedOptions = {},
                     Elements = {},
                 }
+                
+                if Dropdown.MultiSelect then
+                    Dropdown.Value = {}
+                    Dropdown.SelectedOptions = {}
+                end
                 
                 local dropdown = Library.CreateInstance("Frame", {
                     Name = "Dropdown_" .. Dropdown.Name,
@@ -1191,6 +1325,7 @@ function Library.CreateWindow(Properties)
                     BorderSizePixel = 0,
                     Position = Library.UDim2(1, 0, 0.5, 0),
                     Size = Library.UDim2(0, 85, 0, 24),
+                    ZIndex = 10,
                     Parent = dropdown,
                 })
                 
@@ -1208,7 +1343,7 @@ function Library.CreateWindow(Properties)
                 
                 -- Current selection text
                 local currentText = Library.CreateInstance("TextLabel", {
-                    Text = Dropdown.Default or "Select...",
+                    Text = Dropdown.MultiSelect and "Select..." or (Dropdown.Default or "Select..."),
                     FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
                     TextColor3 = Color3.fromRGB(180, 180, 180),
                     TextSize = Library.GetScaledTextSize(11),
@@ -1216,6 +1351,7 @@ function Library.CreateWindow(Properties)
                     BackgroundTransparency = 1,
                     Position = Library.UDim2(0, 8, 0, 0),
                     Size = Library.UDim2(1, -30, 1, 0),
+                    ZIndex = 11,
                     Parent = dropdownButton,
                 })
                 
@@ -1227,21 +1363,29 @@ function Library.CreateWindow(Properties)
                     BackgroundTransparency = 1,
                     Position = Library.UDim2(1, -6, 0.5, 0),
                     Size = Library.UDim2(0, 14, 0, 14),
+                    ZIndex = 11,
                     Parent = dropdownButton,
                 })
                 
-                -- Dropdown options frame (hidden by default)
-                local optionsFrame = Library.CreateInstance("ScrollingFrame", {
+                -- Create a high ZIndex ScreenGui for the dropdown options
+                local dropdownScreenGui = Library.CreateInstance("ScreenGui", {
+                    Name = "DropdownOverlay_" .. Dropdown.Name,
+                    ResetOnSpawn = false,
+                    ZIndexBehavior = Enum.ZIndexBehavior.Global,
+                    Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui"),
+                })
+                
+                -- Dropdown options frame with HIGH ZIndex
+                local optionsFrame = Library.CreateInstance("Frame", {
                     Name = "OptionsFrame",
                     BackgroundColor3 = Color3.fromRGB(30, 30, 35),
                     BackgroundTransparency = 0.1,
                     BorderSizePixel = 0,
-                    ScrollBarThickness = 3,
-                    ScrollBarImageColor3 = Color3.fromRGB(60, 60, 65),
-                    Position = Library.UDim2(0, 0, 1, 5),
-                    Size = Library.UDim2(1, 0, 0, 0),
+                    Size = Library.UDim2(0, dropdownButton.AbsoluteSize.X, 0, 0),
+                    Position = UDim2.new(0, dropdownButton.AbsolutePosition.X, 0, dropdownButton.AbsolutePosition.Y + dropdownButton.AbsoluteSize.Y + 5),
                     Visible = false,
-                    Parent = dropdown,
+                    ZIndex = 1000000, -- Very high ZIndex
+                    Parent = dropdownScreenGui,
                 })
                 
                 Library.CreateInstance("UICorner", {
@@ -1255,28 +1399,91 @@ function Library.CreateWindow(Properties)
                     Parent = optionsFrame,
                 })
                 
+                -- Search input for searchable dropdowns
+                local searchInput
+                if Dropdown.Searchable then
+                    searchInput = Library.CreateInstance("TextBox", {
+                        Name = "SearchInput",
+                        FontFace = Font.new("rbxassetid://12187365364"),
+                        PlaceholderText = "Search...",
+                        PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+                        Text = "",
+                        TextColor3 = Color3.fromRGB(220, 220, 220),
+                        TextSize = Library.GetScaledTextSize(11),
+                        BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+                        BackgroundTransparency = 0.2,
+                        BorderSizePixel = 0,
+                        Size = Library.UDim2(1, -10, 0, 25),
+                        Position = Library.UDim2(0, 5, 0, 5),
+                        ZIndex = 1000001,
+                        Parent = optionsFrame,
+                    })
+                    
+                    Library.CreateInstance("UICorner", {
+                        CornerRadius = UDim.new(0, 4),
+                        Parent = searchInput,
+                    })
+                    
+                    Library.CreateInstance("UIPadding", {
+                        PaddingLeft = UDim.new(0, 8),
+                        PaddingRight = UDim.new(0, 8),
+                        Parent = searchInput,
+                    })
+                end
+                
+                -- Options container
+                local optionsContainer = Library.CreateInstance("ScrollingFrame", {
+                    Name = "OptionsContainer",
+                    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                    ScrollBarImageColor3 = Color3.fromRGB(70, 70, 75),
+                    ScrollBarThickness = 3,
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    Size = Dropdown.Searchable and Library.UDim2(1, -10, 1, -35) or Library.UDim2(1, -10, 1, -10),
+                    Position = Dropdown.Searchable and Library.UDim2(0, 5, 0, 35) or Library.UDim2(0, 5, 0, 5),
+                    ZIndex = 1000001,
+                    Parent = optionsFrame,
+                })
+                
                 local optionsLayout = Library.CreateInstance("UIListLayout", {
+                    Padding = UDim.new(0, 5),
                     SortOrder = Enum.SortOrder.LayoutOrder,
-                    Parent = optionsFrame,
+                    Parent = optionsContainer,
                 })
                 
-                Library.CreateInstance("UIPadding", {
-                    PaddingTop = UDim.new(0, 5),
-                    PaddingBottom = UDim.new(0, 5),
-                    Parent = optionsFrame,
-                })
-                
-                -- Function to update options
-                local function updateOptions()
-                    -- Clear existing options
-                    for _, child in pairs(optionsFrame:GetChildren()) do
+                -- Function to update displayed options
+                local function updateOptionsDisplay()
+                    for _, child in pairs(optionsContainer:GetChildren()) do
                         if child:IsA("TextButton") then
                             child:Destroy()
                         end
                     end
                     
-                    -- Add new options
-                    for i, option in pairs(Dropdown.Options) do
+                    local filteredOptions = Dropdown.Options
+                    if Dropdown.Searchable and searchInput and searchInput.Text ~= "" then
+                        local searchTerm = searchInput.Text:lower()
+                        filteredOptions = {}
+                        for _, option in ipairs(Dropdown.Options) do
+                            if option:lower():find(searchTerm) then
+                                table.insert(filteredOptions, option)
+                            end
+                        end
+                    end
+                    
+                    -- Limit height and show scrollbar if too many options
+                    local maxHeight = 200
+                    if #filteredOptions > 8 then
+                        optionsContainer.Size = Dropdown.Searchable and Library.UDim2(1, -10, 0, 200) or Library.UDim2(1, -10, 0, 200)
+                        optionsContainer.CanvasSize = UDim2.new(0, 0, 0, #filteredOptions * 30)
+                    else
+                        optionsContainer.Size = Dropdown.Searchable and Library.UDim2(1, -10, 0, #filteredOptions * 30) or Library.UDim2(1, -10, 0, #filteredOptions * 30)
+                        optionsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+                    end
+                    
+                    optionsFrame.Size = Dropdown.Searchable and Library.UDim2(0, dropdownButton.AbsoluteSize.X, 0, 35 + math.min(maxHeight, #filteredOptions * 30 + 10)) 
+                                      or Library.UDim2(0, dropdownButton.AbsoluteSize.X, 0, math.min(maxHeight, #filteredOptions * 30 + 10))
+                    
+                    for i, option in ipairs(filteredOptions) do
                         local optionButton = Library.CreateInstance("TextButton", {
                             Text = option,
                             FontFace = Font.new("rbxassetid://12187365364"),
@@ -1285,9 +1492,9 @@ function Library.CreateWindow(Properties)
                             BackgroundColor3 = Color3.fromRGB(40, 40, 45),
                             BackgroundTransparency = 1,
                             BorderSizePixel = 0,
-                            Size = Library.UDim2(1, -10, 0, 25),
-                            Position = Library.UDim2(0, 5, 0, (i-1)*25),
-                            Parent = optionsFrame,
+                            Size = Library.UDim2(1, 0, 0, 25),
+                            ZIndex = 1000002,
+                            Parent = optionsContainer,
                         })
                         
                         Library.CreateInstance("UICorner", {
@@ -1295,11 +1502,59 @@ function Library.CreateWindow(Properties)
                             Parent = optionButton,
                         })
                         
+                        -- Check if this option is selected
+                        if Dropdown.MultiSelect then
+                            if Dropdown.SelectedOptions[option] then
+                                optionButton.TextColor3 = Color3.fromRGB(120, 180, 255)
+                            end
+                        else
+                            if Dropdown.Value == option then
+                                optionButton.TextColor3 = Color3.fromRGB(120, 180, 255)
+                            end
+                        end
+                        
                         optionButton.MouseButton1Click:Connect(function()
-                            Dropdown.Value = option
-                            currentText.Text = option
-                            Dropdown.Callback(option)
-                            toggleDropdown()
+                            if Dropdown.MultiSelect then
+                                Dropdown.SelectedOptions[option] = not Dropdown.SelectedOptions[option]
+                                if Dropdown.SelectedOptions[option] then
+                                    optionButton.TextColor3 = Color3.fromRGB(120, 180, 255)
+                                else
+                                    optionButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+                                end
+                                
+                                -- Update display text
+                                local selectedCount = 0
+                                local displayText = ""
+                                for opt, _ in pairs(Dropdown.SelectedOptions) do
+                                    selectedCount = selectedCount + 1
+                                    if selectedCount == 1 then
+                                        displayText = opt
+                                    elseif selectedCount == 2 then
+                                        displayText = displayText .. ", " .. opt
+                                    elseif selectedCount == 3 then
+                                        displayText = displayText .. " +" .. (table.size(Dropdown.SelectedOptions) - 2) .. " more"
+                                        break
+                                    end
+                                end
+                                
+                                if selectedCount == 0 then
+                                    currentText.Text = "Select..."
+                                else
+                                    currentText.Text = displayText
+                                end
+                                
+                                Dropdown.Value = {}
+                                for opt, _ in pairs(Dropdown.SelectedOptions) do
+                                    table.insert(Dropdown.Value, opt)
+                                end
+                            else
+                                Dropdown.Value = option
+                                currentText.Text = option
+                                dropdownScreenGui:Destroy()
+                                Dropdown.isOpen = false
+                            end
+                            
+                            Dropdown.Callback(Dropdown.Value)
                         end)
                         
                         optionButton.MouseEnter:Connect(function()
@@ -1310,20 +1565,12 @@ function Library.CreateWindow(Properties)
                         end)
                         
                         optionButton.MouseLeave:Connect(function()
+                            local isSelected = Dropdown.MultiSelect and Dropdown.SelectedOptions[option] or Dropdown.Value == option
                             TweenService:Create(optionButton, TweenInfo.new(0.15), {
                                 BackgroundTransparency = 1,
-                                TextColor3 = Color3.fromRGB(180, 180, 180),
+                                TextColor3 = isSelected and Color3.fromRGB(120, 180, 255) or Color3.fromRGB(180, 180, 180),
                             }):Play()
                         end)
-                    end
-                    
-                    -- Update options frame size
-                    local optionCount = #Dropdown.Options
-                    if optionCount > 5 then
-                        optionsFrame.Size = Library.UDim2(1, 0, 0, 150)
-                        optionsFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 25)
-                    else
-                        optionsFrame.Size = Library.UDim2(1, 0, 0, optionCount * 25 + 10)
                     end
                 end
                 
@@ -1332,10 +1579,12 @@ function Library.CreateWindow(Properties)
                     Dropdown.isOpen = not Dropdown.isOpen
                     
                     if Dropdown.isOpen then
-                        updateOptions()
+                        updateOptionsDisplay()
                         optionsFrame.Visible = true
+                        optionsFrame.Position = UDim2.new(0, dropdownButton.AbsolutePosition.X, 0, dropdownButton.AbsolutePosition.Y + dropdownButton.AbsoluteSize.Y + 5)
+                        
                         TweenService:Create(optionsFrame, TweenInfo.new(0.2), {
-                            Size = Library.UDim2(1, 0, 0, math.min(150, #Dropdown.Options * 25 + 10)),
+                            Size = UDim2.new(0, dropdownButton.AbsoluteSize.X, 0, Dropdown.Searchable and 35 + math.min(200, #Dropdown.Options * 30 + 10) or math.min(200, #Dropdown.Options * 30 + 10)),
                         }):Play()
                         
                         TweenService:Create(dropdownButton, TweenInfo.new(0.2), {
@@ -1346,13 +1595,19 @@ function Library.CreateWindow(Properties)
                             Rotation = 180,
                             ImageColor3 = Color3.fromRGB(220, 220, 220),
                         }):Play()
+                        
+                        if Dropdown.Searchable and searchInput then
+                            task.wait(0.1)
+                            searchInput:CaptureFocus()
+                        end
                     else
                         TweenService:Create(optionsFrame, TweenInfo.new(0.2), {
-                            Size = Library.UDim2(1, 0, 0, 0),
+                            Size = UDim2.new(0, dropdownButton.AbsoluteSize.X, 0, 0),
                         }):Play()
                         
-                        wait(0.2)
+                        task.wait(0.2)
                         optionsFrame.Visible = false
+                        dropdownScreenGui:Destroy()
                         
                         TweenService:Create(dropdownButton, TweenInfo.new(0.2), {
                             BackgroundColor3 = Color3.fromRGB(35, 35, 35),
@@ -1365,77 +1620,55 @@ function Library.CreateWindow(Properties)
                     end
                 end
                 
-                -- Update options on creation
-                updateOptions()
-                
                 -- Dropdown button click
                 dropdownButton.MouseButton1Click:Connect(toggleDropdown)
                 
-                -- Close dropdown when clicking elsewhere
-                local connection
-                connection = UserInputService.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        local mousePos = UserInputService:GetMouseLocation()
-                        local buttonPos = dropdownButton.AbsolutePosition
-                        local buttonSize = dropdownButton.AbsoluteSize
-                        local framePos = optionsFrame.AbsolutePosition
-                        local frameSize = optionsFrame.AbsoluteSize
-                        
-                        local isOverButton = mousePos.X >= buttonPos.X and mousePos.X <= buttonPos.X + buttonSize.X and
-                                           mousePos.Y >= buttonPos.Y and mousePos.Y <= buttonPos.Y + buttonSize.Y
-                        
-                        local isOverFrame = mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
-                                           mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y
-                        
-                        if Dropdown.isOpen and not isOverButton and not isOverFrame then
-                            toggleDropdown()
-                        end
-                    end
-                end)
-                
-                -- Clean up connection when dropdown is destroyed
-                dropdown.Destroying:Connect(function()
-                    if connection then
-                        connection:Disconnect()
-                    end
-                end)
-                
-                -- Hover effects
-                dropdownButton.MouseEnter:Connect(function()
-                    TweenService:Create(dropdownButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-                    }):Play()
-                    
-                    TweenService:Create(dropdownname, TweenInfo.new(0.15), {
-                        TextColor3 = Color3.fromRGB(180, 180, 180),
-                    }):Play()
-                end)
-                
-                dropdownButton.MouseLeave:Connect(function()
-                    if not Dropdown.isOpen then
-                        TweenService:Create(dropdownButton, TweenInfo.new(0.15), {
-                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                        }):Play()
-                        
-                        TweenService:Create(dropdownname, TweenInfo.new(0.15), {
-                            TextColor3 = Color3.fromRGB(150, 150, 150),
-                        }):Play()
-                    end
-                end)
+                -- Search functionality
+                if Dropdown.Searchable and searchInput then
+                    searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+                        updateOptionsDisplay()
+                    end)
+                end
                 
                 Dropdown.Elements = {
                     Frame = dropdown,
                     Button = dropdownButton,
                     CurrentText = currentText,
                     Icon = dropdownIcon,
-                    Label = dropdownname,
                     OptionsFrame = optionsFrame,
                 }
                 
                 function Dropdown.Set(value)
-                    Dropdown.Value = value
-                    currentText.Text = value or "Select..."
-                    Dropdown.Callback(value)
+                    if Dropdown.MultiSelect then
+                        Dropdown.SelectedOptions = {}
+                        Dropdown.Value = {}
+                        for _, opt in ipairs(value) do
+                            Dropdown.SelectedOptions[opt] = true
+                            table.insert(Dropdown.Value, opt)
+                        end
+                        
+                        -- Update display
+                        local selectedCount = 0
+                        local displayText = ""
+                        for opt, _ in pairs(Dropdown.SelectedOptions) do
+                            selectedCount = selectedCount + 1
+                            if selectedCount == 1 then
+                                displayText = opt
+                            elseif selectedCount == 2 then
+                                displayText = displayText .. ", " .. opt
+                            elseif selectedCount == 3 then
+                                displayText = displayText .. " +" .. (table.size(Dropdown.SelectedOptions) - 2) .. " more"
+                                break
+                            end
+                        end
+                        
+                        currentText.Text = selectedCount > 0 and displayText or "Select..."
+                    else
+                        Dropdown.Value = value
+                        currentText.Text = value or "Select..."
+                    end
+                    
+                    Dropdown.Callback(Dropdown.Value)
                 end
                 
                 function Dropdown.GetValue()
@@ -1444,7 +1677,9 @@ function Library.CreateWindow(Properties)
                 
                 function Dropdown.Refresh(newOptions)
                     Dropdown.Options = newOptions
-                    updateOptions()
+                    if Dropdown.isOpen then
+                        updateOptionsDisplay()
+                    end
                 end
                 
                 return Dropdown
