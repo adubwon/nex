@@ -151,7 +151,7 @@ function Library.CreateWindow(Properties)
         BackgroundColor3 = Color3.fromRGB(25, 25, 25),
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        Size = Library.UDim2(0, 155, 1, 0), -- Slightly wider for better spacing
+        Size = Library.UDim2(0, 155, 1, 0),
         Parent = theholderdwbbg,
     })
     
@@ -160,7 +160,7 @@ function Library.CreateWindow(Properties)
         Parent = sidebarHolder,
     })
     
-    -- Search bar at top
+    -- Search bar at top with working search
     local search = Library.CreateInstance("Frame", {
         Name = "Search",
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -177,12 +177,12 @@ function Library.CreateWindow(Properties)
         BackgroundTransparency = 0.7,
         BorderSizePixel = 0,
         Position = Library.UDim2(0.5, 0, 0.5, 0),
-        Size = Library.UDim2(1, -20, 0, 28), -- Adjusted for better fit
+        Size = Library.UDim2(1, -20, 0, 28),
         Parent = search,
     })
     
     Library.CreateInstance("UICorner", {
-        CornerRadius = UDim.new(0, 6), -- Slightly more rounded
+        CornerRadius = UDim.new(0, 6),
         Parent = searchzone,
     })
     
@@ -206,7 +206,7 @@ function Library.CreateWindow(Properties)
         TextSize = Library.GetScaledTextSize(12),
         TextXAlignment = Enum.TextXAlignment.Left,
         BackgroundTransparency = 1,
-        Position = Library.UDim2(0, 12, 0, 0), -- More padding
+        Position = Library.UDim2(0, 12, 0, 0),
         Size = Library.UDim2(1, -42, 1, 0),
         Parent = searchzone,
     })
@@ -226,13 +226,13 @@ function Library.CreateWindow(Properties)
         BorderSizePixel = 0,
         ScrollBarThickness = 3,
         ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60),
-        Position = Library.UDim2(0, 0, 0, 40), -- Position after search
-        Size = Library.UDim2(1, 0, 1, -40), -- Fill remaining space
+        Position = Library.UDim2(0, 0, 0, 40),
+        Size = Library.UDim2(1, 0, 1, -40),
         Parent = sidebarHolder,
     })
     
     local tabLayout = Library.CreateInstance("UIListLayout", {
-        Padding = UDim.new(0, 8), -- More spacing between tabs
+        Padding = UDim.new(0, 8),
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = tabHolder,
     })
@@ -269,7 +269,7 @@ function Library.CreateWindow(Properties)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ClipsDescendants = true,
-        Size = Library.UDim2(1, -155, 1, 0), -- Match sidebar width
+        Size = Library.UDim2(1, -155, 1, 0),
         Position = Library.UDim2(0, 155, 0, 0),
         Parent = theholderdwbbg,
     })
@@ -309,7 +309,7 @@ function Library.CreateWindow(Properties)
             Elements = {},
         }
         
-        -- Tab button (improved styling)
+        -- Tab button (improved styling with thin white border)
         local atab = Library.CreateInstance("TextButton", {
             Name = "TabButton_" .. Tab.Name,
             Text = "",
@@ -317,7 +317,7 @@ function Library.CreateWindow(Properties)
             BackgroundColor3 = Color3.fromRGB(35, 35, 38),
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Size = Library.UDim2(1, -20, 0, 35), -- Taller for better click area
+            Size = Library.UDim2(1, -20, 0, 35),
             Parent = tabHolder,
             LayoutOrder = #Window.Tabs + 1,
         })
@@ -327,11 +327,12 @@ function Library.CreateWindow(Properties)
             Parent = atab,
         })
         
-        local uIStroke = Library.CreateInstance("UIStroke", {
-            Color = Color3.fromRGB(60, 60, 65),
+        -- Thin white border around tab
+        local tabBorder = Library.CreateInstance("UIStroke", {
+            Color = Color3.fromRGB(80, 80, 85),
             Transparency = 0.8,
             Enabled = false,
-            Thickness = 1,
+            Thickness = 1.5,
             Parent = atab,
         })
         
@@ -344,14 +345,14 @@ function Library.CreateWindow(Properties)
             ScrollBarThickness = 3,
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Position = Library.UDim2(0, 10, 0, 10), -- Added padding
-            Size = Library.UDim2(1, -20, 1, -20), -- Adjusted for padding
+            Position = Library.UDim2(0, 10, 0, 10),
+            Size = Library.UDim2(1, -20, 1, -20),
             Visible = false,
             Parent = contentContainer,
         })
         
         local contentLayout = Library.CreateInstance("UIListLayout", {
-            Padding = UDim.new(0, 15), -- More spacing between sections
+            Padding = UDim.new(0, 15),
             SortOrder = Enum.SortOrder.LayoutOrder,
             Parent = tabContent,
         })
@@ -396,7 +397,7 @@ function Library.CreateWindow(Properties)
                 Image = Tab.Icon,
                 ImageColor3 = Color3.fromRGB(140, 140, 140),
                 BackgroundTransparency = 1,
-                Size = Library.UDim2(0, 16, 0, 16), -- Slightly larger
+                Size = Library.UDim2(0, 16, 0, 16),
                 LayoutOrder = 1,
                 Parent = tabContentHolder,
             })
@@ -406,7 +407,7 @@ function Library.CreateWindow(Properties)
             Text = Tab.Name,
             FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
             TextColor3 = Color3.fromRGB(140, 140, 140),
-            TextSize = Library.GetScaledTextSize(13), -- Slightly larger
+            TextSize = Library.GetScaledTextSize(13),
             TextXAlignment = Enum.TextXAlignment.Left,
             BackgroundTransparency = 1,
             Size = Library.UDim2(0, 0, 1, 0),
@@ -426,8 +427,11 @@ function Library.CreateWindow(Properties)
                     BackgroundTransparency = 0.7,
                 }):Play()
                 
-                uIStroke.Enabled = true
-                uIStroke.Transparency = 0.5
+                tabBorder.Enabled = true
+                tabBorder.Transparency = 0.3
+                TweenService:Create(tabBorder, tweenInfo, {
+                    Color = Color3.fromRGB(150, 150, 155),
+                }):Play()
                 
                 if tabIcon then
                     TweenService:Create(tabIcon, tweenInfo, {
@@ -445,7 +449,7 @@ function Library.CreateWindow(Properties)
                     BackgroundTransparency = 1,
                 }):Play()
                 
-                uIStroke.Enabled = false
+                tabBorder.Enabled = false
                 
                 if tabIcon then
                     TweenService:Create(tabIcon, tweenInfo, {
@@ -479,6 +483,11 @@ function Library.CreateWindow(Properties)
                     BackgroundTransparency = 0.85,
                 }):Play()
                 
+                tabBorder.Enabled = true
+                TweenService:Create(tabBorder, TweenInfo.new(0.15), {
+                    Transparency = 0.5,
+                }):Play()
+                
                 if tabIcon then
                     TweenService:Create(tabIcon, TweenInfo.new(0.15), {
                         ImageColor3 = Color3.fromRGB(180, 180, 180),
@@ -496,6 +505,8 @@ function Library.CreateWindow(Properties)
                 TweenService:Create(atab, TweenInfo.new(0.15), {
                     BackgroundTransparency = 1,
                 }):Play()
+                
+                tabBorder.Enabled = false
                 
                 if tabIcon then
                     TweenService:Create(tabIcon, TweenInfo.new(0.15), {
@@ -536,7 +547,7 @@ function Library.CreateWindow(Properties)
                 BackgroundTransparency = 0.5,
                 BorderSizePixel = 0,
                 Size = Library.UDim2(1, 0, 0, 0),
-                Parent = self.Elements.Content,
+                Parent = Tab.Elements.Content,
             })
             
             Library.CreateInstance("UICorner", {
@@ -594,7 +605,7 @@ function Library.CreateWindow(Properties)
             })
             
             local contentLayout = Library.CreateInstance("UIListLayout", {
-                Padding = UDim.new(0, 10), -- More spacing between elements
+                Padding = UDim.new(0, 10),
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Parent = aholder,
             })
@@ -608,7 +619,7 @@ function Library.CreateWindow(Properties)
             Section.Elements.SectionFrame = section
             Section.Elements.SectionContent = aholder
             
-            -- Toggle creation function for this section
+            -- Toggle creation function (FIXED)
             function Section:Toggle(Properties)
                 if not Properties then Properties = {} end
                 
@@ -623,7 +634,7 @@ function Library.CreateWindow(Properties)
                 local toggle = Library.CreateInstance("Frame", {
                     Name = "Toggle_" .. Toggle.Name,
                     BackgroundTransparency = 1,
-                    Size = Library.UDim2(1, 0, 0, 28), -- Taller for better spacing
+                    Size = Library.UDim2(1, 0, 0, 28),
                     Parent = self.Elements.SectionContent,
                 })
                 
@@ -639,12 +650,12 @@ function Library.CreateWindow(Properties)
                     Parent = toggle,
                 })
                 
-                -- Toggle button with improved glass effect
+                -- FIXED: Toggle button - removed extra glass frame
                 local toggleButton = Library.CreateInstance("TextButton", {
                     Name = "ToggleButton",
                     Text = "",
                     AutoButtonColor = false,
-                    AnchorPoint = Vector2.new(1, 0),
+                    AnchorPoint = Vector2.new(1, 0.5),
                     BackgroundColor3 = Color3.fromRGB(35, 35, 35),
                     BackgroundTransparency = 0.2,
                     BorderSizePixel = 0,
@@ -658,10 +669,11 @@ function Library.CreateWindow(Properties)
                     Parent = toggleButton,
                 })
                 
+                -- Glass border (single border, not extra glass frame)
                 local glassStroke = Library.CreateInstance("UIStroke", {
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Transparency = 0.8,
-                    Thickness = 1,
+                    Color = Color3.fromRGB(100, 100, 100),
+                    Transparency = 0.6,
+                    Thickness = 1.5,
                     Parent = toggleButton,
                 })
                 
@@ -682,17 +694,11 @@ function Library.CreateWindow(Properties)
                     Parent = toggleKnob,
                 })
                 
-                Library.CreateInstance("UIStroke", {
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Transparency = 0.3,
-                    Parent = toggleKnob,
-                })
-                
                 -- Set initial state
                 if Toggle.Value then
                     toggleKnob.Position = Library.UDim2(1, -17, 0.5, -7)
                     toggleButton.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
-                    glassStroke.Color = Color3.fromRGB(100, 180, 255)
+                    glassStroke.Color = Color3.fromRGB(120, 180, 255)
                     toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 end
                 
@@ -710,7 +716,11 @@ function Library.CreateWindow(Properties)
                         }):Play()
                         
                         TweenService:Create(glassStroke, TweenInfo.new(0.2), {
-                            Color = Color3.fromRGB(100, 180, 255),
+                            Color = Color3.fromRGB(120, 180, 255),
+                        }):Play()
+                        
+                        TweenService:Create(toggleKnob, TweenInfo.new(0.2), {
+                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         }):Play()
                     else
                         TweenService:Create(toggleKnob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -722,7 +732,11 @@ function Library.CreateWindow(Properties)
                         }):Play()
                         
                         TweenService:Create(glassStroke, TweenInfo.new(0.2), {
-                            Color = Color3.fromRGB(255, 255, 255),
+                            Color = Color3.fromRGB(100, 100, 100),
+                        }):Play()
+                        
+                        TweenService:Create(toggleKnob, TweenInfo.new(0.2), {
+                            BackgroundColor3 = Color3.fromRGB(240, 240, 240),
                         }):Play()
                     end
                     
@@ -782,7 +796,82 @@ function Library.CreateWindow(Properties)
                 return Toggle
             end
             
-            -- Dropdown creation function
+            -- Button creation function (NEW)
+            function Section:Button(Properties)
+                if not Properties then Properties = {} end
+                
+                local Button = {
+                    Name = Properties.Name or "Button",
+                    Callback = Properties.Callback or function() end,
+                    Elements = {},
+                }
+                
+                local button = Library.CreateInstance("TextButton", {
+                    Name = "Button_" .. Button.Name,
+                    Text = Button.Name,
+                    FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium),
+                    TextColor3 = Color3.fromRGB(200, 200, 200),
+                    TextSize = Library.GetScaledTextSize(12),
+                    AutoButtonColor = false,
+                    BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+                    BackgroundTransparency = 0.3,
+                    BorderSizePixel = 0,
+                    Size = Library.UDim2(1, 0, 0, 32),
+                    Parent = self.Elements.SectionContent,
+                })
+                
+                Library.CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(0, 6),
+                    Parent = button,
+                })
+                
+                Library.CreateInstance("UIStroke", {
+                    Color = Color3.fromRGB(80, 80, 85),
+                    Transparency = 0.5,
+                    Thickness = 1,
+                    Parent = button,
+                })
+                
+                -- Button functionality
+                button.MouseButton1Click:Connect(function()
+                    -- Press animation
+                    TweenService:Create(button, TweenInfo.new(0.1), {
+                        BackgroundTransparency = 0.5,
+                        Size = Library.UDim2(1, -4, 0, 30),
+                    }):Play()
+                    
+                    TweenService:Create(button, TweenInfo.new(0.1), {
+                        BackgroundTransparency = 0.3,
+                        Size = Library.UDim2(1, 0, 0, 32),
+                    }):Play()
+                    
+                    -- Call callback
+                    Button.Callback()
+                end)
+                
+                -- Hover effects
+                button.MouseEnter:Connect(function()
+                    TweenService:Create(button, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(50, 50, 55),
+                        TextColor3 = Color3.fromRGB(220, 220, 220),
+                    }):Play()
+                end)
+                
+                button.MouseLeave:Connect(function()
+                    TweenService:Create(button, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+                        TextColor3 = Color3.fromRGB(200, 200, 200),
+                    }):Play()
+                end)
+                
+                Button.Elements = {
+                    Button = button,
+                }
+                
+                return Button
+            end
+            
+            -- Dropdown creation function (FIXED and WORKING)
             function Section:Dropdown(Properties)
                 if not Properties then Properties = {} end
                 
@@ -792,7 +881,6 @@ function Library.CreateWindow(Properties)
                     Default = Properties.Default,
                     Callback = Properties.Callback or function() end,
                     Value = Properties.Default or nil,
-                    Searchable = Properties.Searchable ~= false,
                     isOpen = false,
                     Elements = {},
                 }
@@ -837,9 +925,9 @@ function Library.CreateWindow(Properties)
                 })
                 
                 Library.CreateInstance("UIStroke", {
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Transparency = 0.8,
-                    Thickness = 1,
+                    Color = Color3.fromRGB(100, 100, 100),
+                    Transparency = 0.6,
+                    Thickness = 1.5,
                     Parent = dropdownButton,
                 })
                 
@@ -867,7 +955,177 @@ function Library.CreateWindow(Properties)
                     Parent = dropdownButton,
                 })
                 
-                -- Dropdown functionality (basic - can be expanded)
+                -- Dropdown options frame (hidden by default)
+                local optionsFrame = Library.CreateInstance("ScrollingFrame", {
+                    Name = "OptionsFrame",
+                    BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+                    BackgroundTransparency = 0.1,
+                    BorderSizePixel = 0,
+                    ScrollBarThickness = 3,
+                    ScrollBarImageColor3 = Color3.fromRGB(60, 60, 65),
+                    Position = Library.UDim2(0, 0, 1, 5),
+                    Size = Library.UDim2(1, 0, 0, 0),
+                    Visible = false,
+                    Parent = dropdown,
+                })
+                
+                Library.CreateInstance("UICorner", {
+                    CornerRadius = UDim.new(0, 6),
+                    Parent = optionsFrame,
+                })
+                
+                Library.CreateInstance("UIStroke", {
+                    Color = Color3.fromRGB(60, 60, 65),
+                    Thickness = 1,
+                    Parent = optionsFrame,
+                })
+                
+                local optionsLayout = Library.CreateInstance("UIListLayout", {
+                    SortOrder = Enum.SortOrder.LayoutOrder,
+                    Parent = optionsFrame,
+                })
+                
+                Library.CreateInstance("UIPadding", {
+                    PaddingTop = UDim.new(0, 5),
+                    PaddingBottom = UDim.new(0, 5),
+                    Parent = optionsFrame,
+                })
+                
+                -- Function to update options
+                local function updateOptions()
+                    -- Clear existing options
+                    for _, child in pairs(optionsFrame:GetChildren()) do
+                        if child:IsA("TextButton") then
+                            child:Destroy()
+                        end
+                    end
+                    
+                    -- Add new options
+                    for i, option in pairs(Dropdown.Options) do
+                        local optionButton = Library.CreateInstance("TextButton", {
+                            Text = option,
+                            FontFace = Font.new("rbxassetid://12187365364"),
+                            TextColor3 = Color3.fromRGB(180, 180, 180),
+                            TextSize = Library.GetScaledTextSize(11),
+                            BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+                            BackgroundTransparency = 1,
+                            BorderSizePixel = 0,
+                            Size = Library.UDim2(1, -10, 0, 25),
+                            Position = Library.UDim2(0, 5, 0, (i-1)*25),
+                            Parent = optionsFrame,
+                        })
+                        
+                        Library.CreateInstance("UICorner", {
+                            CornerRadius = UDim.new(0, 4),
+                            Parent = optionButton,
+                        })
+                        
+                        optionButton.MouseButton1Click:Connect(function()
+                            Dropdown.Value = option
+                            currentText.Text = option
+                            Dropdown.Callback(option)
+                            toggleDropdown()
+                        end)
+                        
+                        optionButton.MouseEnter:Connect(function()
+                            TweenService:Create(optionButton, TweenInfo.new(0.15), {
+                                BackgroundTransparency = 0.8,
+                                TextColor3 = Color3.fromRGB(220, 220, 220),
+                            }):Play()
+                        end)
+                        
+                        optionButton.MouseLeave:Connect(function()
+                            TweenService:Create(optionButton, TweenInfo.new(0.15), {
+                                BackgroundTransparency = 1,
+                                TextColor3 = Color3.fromRGB(180, 180, 180),
+                            }):Play()
+                        end)
+                    end
+                    
+                    -- Update options frame size
+                    local optionCount = #Dropdown.Options
+                    if optionCount > 5 then
+                        optionsFrame.Size = Library.UDim2(1, 0, 0, 150)
+                        optionsFrame.CanvasSize = UDim2.new(0, 0, 0, optionCount * 25)
+                    else
+                        optionsFrame.Size = Library.UDim2(1, 0, 0, optionCount * 25 + 10)
+                    end
+                end
+                
+                -- Function to toggle dropdown
+                local function toggleDropdown()
+                    Dropdown.isOpen = not Dropdown.isOpen
+                    
+                    if Dropdown.isOpen then
+                        updateOptions()
+                        optionsFrame.Visible = true
+                        TweenService:Create(optionsFrame, TweenInfo.new(0.2), {
+                            Size = Library.UDim2(1, 0, 0, math.min(150, #Dropdown.Options * 25 + 10)),
+                        }):Play()
+                        
+                        TweenService:Create(dropdownButton, TweenInfo.new(0.2), {
+                            BackgroundColor3 = Color3.fromRGB(45, 45, 50),
+                        }):Play()
+                        
+                        TweenService:Create(dropdownIcon, TweenInfo.new(0.2), {
+                            Rotation = 180,
+                            ImageColor3 = Color3.fromRGB(220, 220, 220),
+                        }):Play()
+                    else
+                        TweenService:Create(optionsFrame, TweenInfo.new(0.2), {
+                            Size = Library.UDim2(1, 0, 0, 0),
+                        }):Play()
+                        
+                        wait(0.2)
+                        optionsFrame.Visible = false
+                        
+                        TweenService:Create(dropdownButton, TweenInfo.new(0.2), {
+                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+                        }):Play()
+                        
+                        TweenService:Create(dropdownIcon, TweenInfo.new(0.2), {
+                            Rotation = 0,
+                            ImageColor3 = Color3.fromRGB(180, 180, 180),
+                        }):Play()
+                    end
+                end
+                
+                -- Update options on creation
+                updateOptions()
+                
+                -- Dropdown button click
+                dropdownButton.MouseButton1Click:Connect(toggleDropdown)
+                
+                -- Close dropdown when clicking elsewhere
+                local connection
+                connection = UserInputService.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        local buttonPos = dropdownButton.AbsolutePosition
+                        local buttonSize = dropdownButton.AbsoluteSize
+                        local framePos = optionsFrame.AbsolutePosition
+                        local frameSize = optionsFrame.AbsoluteSize
+                        
+                        local isOverButton = mousePos.X >= buttonPos.X and mousePos.X <= buttonPos.X + buttonSize.X and
+                                           mousePos.Y >= buttonPos.Y and mousePos.Y <= buttonPos.Y + buttonSize.Y
+                        
+                        local isOverFrame = mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
+                                           mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y
+                        
+                        if Dropdown.isOpen and not isOverButton and not isOverFrame then
+                            toggleDropdown()
+                        end
+                    end
+                end)
+                
+                -- Clean up connection when dropdown is destroyed
+                dropdown.Destroying:Connect(function()
+                    if connection then
+                        connection:Disconnect()
+                    end
+                end)
+                
+                -- Hover effects
                 dropdownButton.MouseEnter:Connect(function()
                     TweenService:Create(dropdownButton, TweenInfo.new(0.15), {
                         BackgroundColor3 = Color3.fromRGB(40, 40, 40),
@@ -879,13 +1137,15 @@ function Library.CreateWindow(Properties)
                 end)
                 
                 dropdownButton.MouseLeave:Connect(function()
-                    TweenService:Create(dropdownButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                    }):Play()
-                    
-                    TweenService:Create(dropdownname, TweenInfo.new(0.15), {
-                        TextColor3 = Color3.fromRGB(150, 150, 150),
-                    }):Play()
+                    if not Dropdown.isOpen then
+                        TweenService:Create(dropdownButton, TweenInfo.new(0.15), {
+                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+                        }):Play()
+                        
+                        TweenService:Create(dropdownname, TweenInfo.new(0.15), {
+                            TextColor3 = Color3.fromRGB(150, 150, 150),
+                        }):Play()
+                    end
                 end)
                 
                 Dropdown.Elements = {
@@ -894,6 +1154,7 @@ function Library.CreateWindow(Properties)
                     CurrentText = currentText,
                     Icon = dropdownIcon,
                     Label = dropdownname,
+                    OptionsFrame = optionsFrame,
                 }
                 
                 function Dropdown.Set(value)
@@ -908,7 +1169,7 @@ function Library.CreateWindow(Properties)
                 
                 function Dropdown.Refresh(newOptions)
                     Dropdown.Options = newOptions
-                    -- Implementation for refreshing dropdown options
+                    updateOptions()
                 end
                 
                 return Dropdown
@@ -925,6 +1186,52 @@ function Library.CreateWindow(Properties)
         
         return Tab
     end
+    
+    -- Search functionality (FIXED)
+    searchinput.Focused:Connect(function()
+        TweenService:Create(searchzone, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 38),
+        }):Play()
+        
+        TweenService:Create(keyicon, TweenInfo.new(0.2), {
+            ImageColor3 = Color3.fromRGB(150, 150, 145),
+        }):Play()
+    end)
+    
+    searchinput.FocusLost:Connect(function()
+        TweenService:Create(searchzone, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(35, 35, 33),
+        }):Play()
+        
+        TweenService:Create(keyicon, TweenInfo.new(0.2), {
+            ImageColor3 = Color3.fromRGB(100, 100, 95),
+        }):Play()
+        
+        -- Search functionality
+        local searchText = searchinput.Text:lower()
+        if searchText == "" then
+            -- Show all tabs
+            for _, tabButton in pairs(tabHolder:GetChildren()) do
+                if tabButton:IsA("TextButton") then
+                    tabButton.Visible = true
+                end
+            end
+        else
+            -- Filter tabs based on search
+            for _, tabButton in pairs(tabHolder:GetChildren()) do
+                if tabButton:IsA("TextButton") then
+                    local tabName = tabButton:FindFirstChild("TabContentHolder")
+                    if tabName then
+                        local nameLabel = tabName:FindFirstChildWhichIsA("TextLabel")
+                        if nameLabel then
+                            local tabText = nameLabel.Text:lower()
+                            tabButton.Visible = tabText:find(searchText) ~= nil
+                        end
+                    end
+                end
+            end
+        end
+    end)
     
     -- Store Window elements
     Window.Elements = {
