@@ -21,7 +21,7 @@ local Config = {
     KEY_STORAGE_FILE = "abysskey.json",
 
     -- Main Settings
-    HubName = "Abyss Hub",
+    HubName = "Snowy Hub",
     ScriptToLoad = "https://github.com/adubwon/nex/raw/refs/heads/main/hub.lua",
 
     -- UI Configuration
@@ -344,7 +344,7 @@ function Kavo:CreateKeySystem()
     local logoLetter = Instance.new("TextLabel")
     logoLetter.Size = UDim2.new(1, 0, 1, 0)
     logoLetter.BackgroundTransparency = 1
-    logoLetter.Text = "A"
+    logoLetter.Text = "S"
     logoLetter.TextColor3 = Config.AccentColor
     logoLetter.TextSize = 64
     logoLetter.Font = Enum.Font.GothamBlack
