@@ -20,8 +20,9 @@ local CoreGui = game:GetService("CoreGui")
 local Config = {
     -- Key System Settings
     CORRECT_KEY = "ezunban",
-    DISCORD_LINK = "https://discord.gg/ezunban",
-    DISCORD_INVITE_CODE = "ezunban",
+    DISCORD_LINK = "https://discord.gg/e8ExhKVXhj",
+    DISCORD_INVITE_CODE = "e8ExhKVXhj",
+    -- old is ezunban
     
     -- Key Storage
     KEY_STORAGE_FILE = "keyyyy.json",
